@@ -1,0 +1,57 @@
+刷题小程序项目目录结构
+
+/
+├── miniprogram/                # 微信小程序前端
+│   ├── pages/                  # 页面目录
+│   │   ├── home/               # 首页
+│   │   ├── question-bank/      # 题库浏览与筛选
+│   │   ├── answer/             # 答题与解析
+│   │   ├── error-book/         # 错题本
+│   │   ├── favorites/          # 收藏夹
+│   │   ├── statistics/         # 统计分析
+│   │   ├── profile/            # 个人中心
+│   │   ├── login/              # 登录注册
+│   │   ├── search/             # 搜索结果
+│   │   ├── message/            # 消息通知
+│   │   └── ...                 # 其他页面
+│   ├── components/             # 公共组件
+│   ├── utils/                  # 工具函数
+│   ├── services/               # 网络请求与API接口
+│   ├── assets/                 # 静态资源（图片、样式等）
+│   ├── app.js                  # 小程序入口
+│   ├── app.json                # 小程序全局配置
+│   └── app.wxss                # 小程序全局样式
+│
+├── admin/                      # 后台管理系统（Web端）
+│   ├── src/
+│   │   ├── views/              # 页面视图
+│   │   ├── components/         # 公共组件
+│   │   ├── api/                # API接口
+│   │   ├── utils/              # 工具函数
+│   │   ├── assets/             # 静态资源
+│   │   ├── router/             # 路由配置
+│   │   ├── store/              # 状态管理
+│   │   └── main.js             # 入口文件
+│   ├── public/                 # 公共资源
+│   ├── vite.config.js          # 构建配置
+│   └── package.json            # 依赖配置
+│
+├── server/                     # 后端API服务
+│   ├── controllers/            # 控制器（业务逻辑）
+│   ├── models/                 # 数据模型
+│   ├── routes/                 # 路由
+│   ├── middlewares/            # 中间件
+│   ├── services/               # 服务层
+│   ├── utils/                  # 工具函数
+│   ├── config/                 # 配置文件
+│   ├── uploads/                # 文
+│   ├── app.js                  # 服务入口
+│   └── package.json            # 依赖配置
+│
+├── docs/                       # 项目文档
+│   ├── UI设计/                 # 线框图、UI设计稿
+│   ├── 需求文档.md             # 需求说明
+│   └── ...
+│
+├── README.md                   # 项目说明
+└── package.json                # 根依赖（如需Monorepo）
