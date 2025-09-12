@@ -19,4 +19,7 @@ router.put('/:id', auth, questionBankController.updateQuestionBank)
 // 删除题库
 router.delete('/:id', auth, questionBankController.deleteQuestionBank)
 
+// 导出题库
+router.get('/:id/export', auth, questionBankController.exportQuestionBank)
+
 module.exports = router

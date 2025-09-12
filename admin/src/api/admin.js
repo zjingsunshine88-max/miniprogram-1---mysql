@@ -31,6 +31,11 @@ const callServerAPI = async (endpoint, options = {}) => {
       throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
     }
 
+    // 如果是blob响应，直接返回
+    if (options.responseType === 'blob') {
+      return response.blob()
+    }
+
     const data = await response.json()
     
     // 检查业务逻辑错误
@@ -116,6 +121,14 @@ export const adminAPI = {
     return callServerAPI('/api/question/delete-bank', {
       method: 'POST',
       body: JSON.stringify({ subject })
+    })
+  },
+
+  // 导出题库
+  exportQuestionBank: (questionBankId, format = 'excel') => {
+    return callServerAPI(`/api/question-bank/${questionBankId}/export?format=${format}`, {
+      method: 'GET',
+      responseType: 'blob'
     })
   }
 }

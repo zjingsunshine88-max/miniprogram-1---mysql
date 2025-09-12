@@ -60,7 +60,7 @@
               <el-icon><Upload /></el-icon>
               智能导入
             </el-button>
-            <el-button type="success" @click="exportQuestions">
+            <el-button type="success" @click="showExportDialog = true">
               <el-icon><Download /></el-icon>
               导出题库
             </el-button>
@@ -106,6 +106,58 @@
         </el-card>
       </el-col>
     </el-row>
+
+    <!-- 导出题库对话框 -->
+    <el-dialog v-model="showExportDialog" title="导出题库" width="500px">
+      <el-form :model="exportForm" label-width="100px">
+        <el-form-item label="选择题库" required>
+          <el-select v-model="exportForm.questionBankId" placeholder="请选择要导出的题库" style="width: 100%" @change="handleQuestionBankChange">
+            <el-option
+              v-for="bank in questionBanks"
+              :key="bank.id"
+              :label="bank.name"
+              :value="bank.id"
+            >
+              <span style="float: left">{{ bank.name }}</span>
+              <span style="float: right; color: #8492a6; font-size: 13px">
+                {{ bank.subjectCount }}个科目 {{ bank.questionCount }}道题目
+              </span>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        
+        <el-form-item label="导出格式">
+          <el-radio-group v-model="exportForm.format">
+            <el-radio label="excel">Excel格式 (.xlsx)</el-radio>
+            <el-radio label="json">JSON格式 (.json)</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item label="题库信息" v-if="selectedQuestionBank">
+          <div class="question-bank-info">
+            <p><strong>题库名称：</strong>{{ selectedQuestionBank.name }}</p>
+            <p><strong>题库描述：</strong>{{ selectedQuestionBank.description || '暂无描述' }}</p>
+            <p><strong>科目数量：</strong>{{ selectedQuestionBank.subjectCount }}个</p>
+            <p><strong>题目数量：</strong>{{ selectedQuestionBank.questionCount }}道</p>
+          </div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="showExportDialog = false">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="handleExport"
+            :loading="exporting"
+            :disabled="!exportForm.questionBankId"
+          >
+            <el-icon><Download /></el-icon>
+            开始导出
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,6 +167,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import { adminAPI } from '../api/admin'
+import { questionBankAPI } from '../api/questionBank'
 
 const router = useRouter()
 
@@ -154,6 +207,16 @@ const announcements = ref([
 // 图表引用
 const chartRef = ref(null)
 let chart = null
+
+// 导出相关数据
+const showExportDialog = ref(false)
+const exporting = ref(false)
+const questionBanks = ref([])
+const selectedQuestionBank = ref(null)
+const exportForm = reactive({
+  questionBankId: '',
+  format: 'excel'
+})
 
 // 加载统计数据
 const loadStats = async () => {
@@ -215,8 +278,75 @@ const smartImport = () => {
   router.push('/smart-question-import')
 }
 
-const exportQuestions = () => {
-  ElMessage.success('跳转到题库导出页面')
+// 加载题库列表
+const loadQuestionBanks = async () => {
+  try {
+    const response = await questionBankAPI.getQuestionBanks({ limit: 1000 })
+    if (response.code === 200) {
+      questionBanks.value = response.data.list || []
+    } else {
+      ElMessage.error(response.message || '获取题库列表失败')
+    }
+  } catch (error) {
+    console.error('加载题库列表失败:', error)
+    ElMessage.error('加载题库列表失败: ' + error.message)
+  }
+}
+
+// 题库选择变化处理
+const handleQuestionBankChange = (questionBankId) => {
+  selectedQuestionBank.value = questionBanks.value.find(bank => bank.id === questionBankId)
+}
+
+// 导出题库
+const handleExport = async () => {
+  if (!exportForm.questionBankId) {
+    ElMessage.error('请选择题库')
+    return
+  }
+
+  exporting.value = true
+  try {
+    const blob = await adminAPI.exportQuestionBank(exportForm.questionBankId, exportForm.format)
+    
+    // 检查blob是否有效
+    if (!blob || blob.size === 0) {
+      throw new Error('导出文件为空')
+    }
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    
+    // 设置文件名，确保文件名合法
+    const questionBank = questionBanks.value.find(bank => bank.id === exportForm.questionBankId)
+    const sanitizedName = questionBank.name.replace(/[<>:"/\\|?*]/g, '_')
+    const extension = exportForm.format === 'excel' ? 'xlsx' : 'json'
+    const fileName = `${sanitizedName}_题库导出.${extension}`
+    link.download = fileName
+    
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // 清理URL对象
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('题库导出成功')
+    showExportDialog.value = false
+    
+    // 重置表单
+    exportForm.questionBankId = ''
+    exportForm.format = 'excel'
+    selectedQuestionBank.value = null
+  } catch (error) {
+    console.error('导出题库失败:', error)
+    ElMessage.error('导出题库失败: ' + error.message)
+  } finally {
+    exporting.value = false
+  }
 }
 
 const addAnnouncement = () => {
@@ -309,6 +439,7 @@ const handleResize = () => {
 
 onMounted(async () => {
   await loadStats()
+  await loadQuestionBanks()
   // 图表初始化在loadStats中完成，这里只需要添加resize监听
   window.addEventListener('resize', handleResize)
 })
@@ -449,5 +580,27 @@ onUnmounted(() => {
   .action-buttons .el-button {
     width: 100%;
   }
+}
+
+/* 导出对话框样式 */
+.dialog-footer {
+  text-align: right;
+}
+
+.question-bank-info {
+  background-color: #f5f7fa;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+
+.question-bank-info p {
+  margin: 8px 0;
+  color: #606266;
+  font-size: 14px;
+}
+
+.question-bank-info strong {
+  color: #303133;
 }
 </style> 
