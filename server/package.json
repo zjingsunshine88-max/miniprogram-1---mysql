@@ -4,10 +4,14 @@
   "description": "刷题小程序后端API服务",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "NODE_ENV=production node app.js",
     "dev": "nodemon app.js",
+    "prod": "NODE_ENV=production node app.js",
     "init-db": "node scripts/init-db.js",
-    "init-admin": "node scripts/init-admin.js"
+    "init-admin": "node scripts/init-admin.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js"
   },
   "dependencies": {
     "@koa/multer": "^4.0.0",

@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: question-bank-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-your_strong_password}
+      MYSQL_DATABASE: ${DB_NAME:-practice}
+      MYSQL_USER: ${DB_USERNAME:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-your_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/database/init_database.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - question-bank-network
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: question-bank-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - question-bank-network
+
+  # API服务
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: question-bank-api
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-practice}
+      DB_USERNAME: ${DB_USERNAME:-app_user}
+      DB_PASSWORD: ${DB_PASSWORD:-your_password}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+    volumes:
+      - ./server/public/uploads:/app/public/uploads
+      - ./server/logs:/app/logs
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - question-bank-network
+
+  # 后台管理系统
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: question-bank-admin
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      VITE_SERVER_URL: http://api:3002
+    depends_on:
+      - api
+    networks:
+      - question-bank-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: question-bank-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - admin
+      - api
+    networks:
+      - question-bank-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  question-bank-network:
+    driver: bridge
