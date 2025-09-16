@@ -94,6 +94,16 @@ User.beforeCreate(async (user) => {
 
 // 密码验证方法
 User.prototype.validatePassword = async function(password) {
+  // 如果没有设置密码，直接返回true（适用于管理员用户）
+  if (!this.password) {
+    return true;
+  }
+  
+  // 如果密码为空或未定义，返回false
+  if (!password) {
+    return false;
+  }
+  
   return await bcrypt.compare(password, this.password);
 };
 

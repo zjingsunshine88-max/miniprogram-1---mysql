@@ -3,26 +3,7 @@ const { Sequelize } = require('sequelize');
 // 根据环境加载配置
 const config = process.env.NODE_ENV === 'production' 
   ? require('./production').database
-  : {
-      host: 'localhost',
-      dialect: 'mysql',
-      port: 3306,
-      username: 'root',
-      password: 'LOVEjing96..',
-      database: 'practice',
-      logging: false,
-      define: {
-        timestamps: true,
-        underscored: true,
-        freezeTableName: true
-      },
-      pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-      }
-    };
+  : require('./development').database;
 
 // MySQL数据库配置
 const sequelize = new Sequelize(config.database, config.username, config.password, {

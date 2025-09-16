@@ -870,7 +870,7 @@ const adminLogin = async (ctx) => {
       ctx.status = 400;
       ctx.body = {
         code: 400,
-        message: '密码错误'
+        message: user.password ? '密码错误' : '管理员用户需要设置密码'
       };
       return;
     }

@@ -106,6 +106,9 @@ REM 2. 构建API服务
 echo 🔨 准备API服务...
 cd /d "%PROJECT_ROOT%server"
 
+REM 设置环境变量
+set NODE_ENV=production
+
 REM 安装生产依赖
 call npm install --production
 if errorlevel 1 (

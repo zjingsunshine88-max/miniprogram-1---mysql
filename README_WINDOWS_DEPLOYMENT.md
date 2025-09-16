@@ -380,6 +380,52 @@ build-admin.bat
 install-terser.bat
 ```
 
+2. **Windows环境变量问题**
+```powershell
+# 错误信息: 'NODE_ENV' 不是内部或外部命令
+# 问题原因: Windows不支持Linux风格的环境变量语法
+# 解决方案1: 使用修复脚本
+fix-windows-env.bat
+
+# 解决方案2: 使用服务器启动器
+server-launcher.bat
+
+# 解决方案3: 手动设置环境变量
+set NODE_ENV=production
+node app.js
+```
+
+3. **MySQL数据库连接失败**
+```powershell
+# 错误信息: Access denied for user 'root'@'localhost'
+# 解决方案1: 使用诊断脚本
+fix-mysql-connection.bat
+
+# 解决方案2: 测试数据库连接
+test-mysql-connection.bat
+
+# 解决方案3: 更新数据库配置
+update-db-config.bat
+
+# 解决方案4: 手动检查MySQL服务
+net start mysql
+mysql -u root -pLOVEjing96.. -e "SELECT 1;"
+```
+
+4. **bcrypt密码验证错误**
+```powershell
+# 错误信息: Illegal arguments: string, object
+# 问题原因: 管理员用户没有设置密码，但系统尝试验证密码
+# 解决方案1: 使用修复脚本
+fix-bcrypt-error.bat
+
+# 解决方案2: 测试修复后的认证
+test-admin-auth-fixed.bat
+
+# 解决方案3: 手动修复User模型
+# 在server/models/User.js中更新validatePassword方法
+```
+
 2. **端口被占用**
 ```powershell
 # 查看端口占用情况

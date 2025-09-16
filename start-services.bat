@@ -27,6 +27,9 @@ if errorlevel 1 (
 REM 启动API服务
 echo 📡 启动API服务...
 cd /d C:\question-bank\api
+
+REM 设置环境变量
+set NODE_ENV=production
 pm2 start app.js --name "question-bank-api" --env production
 
 if errorlevel 1 (
