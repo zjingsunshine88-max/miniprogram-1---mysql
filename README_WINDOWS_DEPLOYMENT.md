@@ -157,6 +157,40 @@ pm2 save
 pm2 status
 ```
 
+### 7. 启动后台管理系统
+
+有多种方式启动admin服务：
+
+#### 方式一：使用启动器（推荐）
+```powershell
+# 运行图形化启动器
+admin-launcher.bat
+```
+
+#### 方式二：使用PM2（生产环境推荐）
+```powershell
+# 使用PM2启动admin
+start-admin-pm2.bat
+```
+
+#### 方式三：使用Nginx（生产环境推荐）
+```powershell
+# 使用Nginx启动admin
+start-admin-nginx.bat
+```
+
+#### 方式四：使用Vite预览服务器
+```powershell
+# 使用Vite预览服务器
+start-admin.bat
+```
+
+#### 方式五：使用简单HTTP服务器
+```powershell
+# 使用简单HTTP服务器
+start-admin-simple.bat
+```
+
 ### 7. 配置Nginx (可选)
 
 创建 `C:\nginx\conf\nginx.conf`：
