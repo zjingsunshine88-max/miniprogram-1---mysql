@@ -27,19 +27,76 @@ if not exist "%SERVICE_DIR%" mkdir "%SERVICE_DIR%"
 REM 1. 构建后台管理系统
 echo 🔨 构建后台管理系统...
 cd /d "%PROJECT_ROOT%admin"
+
+REM 清理node_modules和package-lock.json（可选，确保干净安装）
+if exist "node_modules" rmdir /s /q "node_modules"
+if exist "package-lock.json" del "package-lock.json"
+
+echo 📦 安装后台管理系统依赖...
 call npm install
 if errorlevel 1 (
     echo ❌ 后台管理系统依赖安装失败
+    echo 💡 尝试使用淘宝镜像源...
+    call npm install --registry https://registry.npmmirror.com
+    if errorlevel 1 (
+        echo ❌ 使用镜像源安装也失败
+        pause
+        exit /b 1
+    )
+)
+
+echo 🔨 构建生产版本...
+call npm run build
+if errorlevel 1 (
+    echo ❌ 后台管理系统构建失败
+    echo 💡 尝试使用esbuild压缩器...
+    goto build_with_esbuild
+)
+
+goto build_success
+
+:build_with_esbuild
+echo 🔧 使用esbuild压缩器重新构建...
+REM 临时修改vite配置使用esbuild
+echo import { defineConfig, loadEnv } from 'vite' > vite.config.temp.js
+echo import vue from '@vitejs/plugin-vue' >> vite.config.temp.js
+echo import { resolve } from 'path' >> vite.config.temp.js
+echo. >> vite.config.temp.js
+echo export default defineConfig(({ command, mode }) =^> { >> vite.config.temp.js
+echo   const env = loadEnv(mode, process.cwd(), '') >> vite.config.temp.js
+echo   return { >> vite.config.temp.js
+echo     plugins: [vue()], >> vite.config.temp.js
+echo     resolve: { alias: { '@': resolve(__dirname, 'src') } }, >> vite.config.temp.js
+echo     build: { >> vite.config.temp.js
+echo       outDir: 'dist', >> vite.config.temp.js
+echo       assetsDir: 'assets', >> vite.config.temp.js
+echo       sourcemap: false, >> vite.config.temp.js
+echo       minify: 'esbuild' >> vite.config.temp.js
+echo     } >> vite.config.temp.js
+echo   } >> vite.config.temp.js
+echo }) >> vite.config.temp.js
+
+REM 备份原配置并使用临时配置
+copy vite.config.js vite.config.js.backup
+copy vite.config.temp.js vite.config.js
+del vite.config.temp.js
+
+call npm run build
+if errorlevel 1 (
+    echo ❌ 使用esbuild构建也失败
+    REM 恢复原配置
+    copy vite.config.js.backup vite.config.js
+    del vite.config.js.backup
     pause
     exit /b 1
 )
 
-call npm run build
-if errorlevel 1 (
-    echo ❌ 后台管理系统构建失败
-    pause
-    exit /b 1
-)
+REM 恢复原配置
+copy vite.config.js.backup vite.config.js
+del vite.config.js.backup
+echo ✅ 使用esbuild构建成功！
+
+:build_success
 
 REM 复制构建文件到服务目录
 if not exist "%SERVICE_DIR%\admin" mkdir "%SERVICE_DIR%\admin"

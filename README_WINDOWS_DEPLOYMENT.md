@@ -332,7 +332,21 @@ pause
 
 ### 常见问题
 
-1. **端口被占用**
+1. **Terser依赖缺失**
+```powershell
+# 错误信息: terser not found
+# 解决方案1: 安装terser依赖
+cd admin
+npm install terser --save-dev
+
+# 解决方案2: 使用备用构建脚本
+build-admin.bat
+
+# 解决方案3: 手动安装terser
+install-terser.bat
+```
+
+2. **端口被占用**
 ```powershell
 # 查看端口占用情况
 netstat -ano | findstr :3002
