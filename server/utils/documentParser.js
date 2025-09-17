@@ -15,11 +15,17 @@ class DocumentParser {
     this.questionPatterns = {
       // 题目序号模式
       questionNumber: [
-        /^(\d+)[\.、]\s*/,           // 1. 或 1、
-        /^第(\d+)题\s*/,             // 第1题
-        /^(\d+)\s*[\.、]\s*/,        // 1. 或 1、
-        /^\((\d+)\)\s*/,             // (1)
-        /^(\d+)\s*\)\s*/             // 1)
+        /^\[(多选|单选|判断|填空)\](\d+)/,            // [多选]11 或 [单选]12
+        /^(多选|单选|判断|填空)(\d+)/,                // 多选11 或 单选12
+        /^(\d+)[\.、]\s*\[(多选|单选|判断|填空)\]/,  // 1.[多选] 或 1.[单选]
+        /^(\d+)[\.、]\s*(多选|单选|判断|填空)\s*/,    // 1.多选 或 1.单选
+        /^(\d+)[\.、]\s*$/,                          // 1. (单独一行)
+        /^第(\d+)题\s*/,                             // 第1题
+        /^(\d+)[\.、]\s*题目[：:]\s*/,                // 1.题目：格式
+        /^(\d+)[\.、]\s*[^0-9]/,                     // 1.后面跟非数字字符（排除IP地址等）
+        /^(\d+)\s*[\.、]\s*[^0-9]/,                  // 1. 后面跟非数字字符
+        /^\((\d+)\)\s*/,                             // (1)
+        /^(\d+)\s*\)\s*/                             // 1)
       ],
       
       // 选项模式
@@ -29,7 +35,9 @@ class DocumentParser {
         /^[A-Z]\s*[\.、]\s*(.+)/,    // A. 选项内容
         /^\([A-Z]\)\s*(.+)/,         // (A) 选项内容
         /^[A-Z]\)\s*(.+)/,           // A) 选项内容
-        /^[A-Z]\s*[\.、]\s*(.+)/     // A. 选项内容
+        /^\s*[A-Z][\.、]\s*(.+)/,    //  A. 选项内容 (前面有空格)
+        /^\s*[A-Z][\.、](.+)/,       //  A.选项内容 (前面有空格，没有空格)
+        /^\s*[A-Z]\s*[\.、]\s*(.+)/  //  A. 选项内容 (前面有空格)
       ],
       
       // 答案模式
@@ -354,10 +362,16 @@ class DocumentParser {
           }
           
           // 开始新题目
+          let questionContent = line.replace(questionMatch.match, '').trim();
+          // 如果题目类型标识在题目序号后面，需要从内容中移除
+          if (questionMatch.typeMatch) {
+            questionContent = questionContent.replace(questionMatch.typeMatch, '').trim();
+          }
+          
           currentQuestion = {
             number: questionMatch.number,
-            content: line.replace(questionMatch.match, '').trim(),
-            type: '单选题', // 默认为单选题
+            content: questionContent,
+            type: questionMatch.type || '单选题', // 使用检测到的类型或默认为单选题
             options: [],
             answer: '',
             explanation: '',
@@ -378,6 +392,18 @@ class DocumentParser {
         // 检查是否是选项标记
         if (this.matchOptionMarker(line)) {
           parsingState = 'options';
+          continue;
+        }
+        
+        // 检查是否是选项标记和第一个选项在同一行
+        const optionMarkerWithFirst = this.matchOptionMarkerWithFirstOption(line);
+        if (optionMarkerWithFirst) {
+          parsingState = 'options';
+          // 添加第一个选项
+          currentOptions.push({
+            key: optionMarkerWithFirst.firstOption.key,
+            content: optionMarkerWithFirst.firstOption.content
+          });
           continue;
         }
         
@@ -456,16 +482,102 @@ class DocumentParser {
    * 匹配题目序号
    */
   matchQuestionNumber(line) {
-    for (const pattern of this.questionPatterns.questionNumber) {
+    for (let i = 0; i < this.questionPatterns.questionNumber.length; i++) {
+      const pattern = this.questionPatterns.questionNumber[i];
       const match = line.match(pattern);
       if (match) {
+        let questionType = null;
+        let typeMatch = '';
+        let questionNumber = null;
+        
+        // 对于包含类型标识的模式
+        if (i === 0 && match[1] && match[2]) {
+          // 模式1: [多选]11 格式
+          questionType = this.mapTypeString(match[1]);
+          typeMatch = `[${match[1]}]`;
+          questionNumber = parseInt(match[2]);
+        } else if (i === 1 && match[1] && match[2]) {
+          // 模式2: 多选11 格式
+          questionType = this.mapTypeString(match[1]);
+          typeMatch = match[1];
+          questionNumber = parseInt(match[2]);
+        } else if (i === 2 && match[1] && match[2]) {
+          // 模式3: 1.[多选] 格式
+          questionType = this.mapTypeString(match[2]);
+          typeMatch = `[${match[2]}]`;
+          questionNumber = parseInt(match[1]);
+        } else if (i === 3 && match[1] && match[2]) {
+          // 模式4: 1.多选 格式
+          questionType = this.mapTypeString(match[2]);
+          typeMatch = match[2];
+          questionNumber = parseInt(match[1]);
+        } else {
+          // 其他模式，检查剩余文本中的类型标识
+          const remainingText = line.replace(match[0], '').trim();
+          const typeResult = this.extractQuestionTypeFromText(remainingText);
+          questionType = typeResult.type;
+          typeMatch = typeResult.match;
+          questionNumber = parseInt(match[1]);
+        }
+        
         return {
-          number: parseInt(match[1]),
-          match: match[0]
+          number: questionNumber,
+          match: match[0],
+          type: questionType,
+          typeMatch: typeMatch
         };
       }
     }
     return null;
+  }
+  
+  /**
+   * 映射类型字符串到标准类型
+   */
+  mapTypeString(typeStr) {
+    const typeMap = {
+      '多选': '多选题',
+      '单选': '单选题',
+      '判断': '判断题',
+      '填空': '填空题'
+    };
+    return typeMap[typeStr] || null;
+  }
+
+  /**
+   * 从文本中提取题目类型
+   */
+  extractQuestionTypeFromText(text) {
+    // 题目类型模式
+    const typePatterns = [
+      { pattern: /^\[多选\]\s*/, type: '多选题' },
+      { pattern: /^\[单选\]\s*/, type: '单选题' },
+      { pattern: /^\[判断\]\s*/, type: '判断题' },
+      { pattern: /^\[填空\]\s*/, type: '填空题' },
+      { pattern: /^多选\s*/, type: '多选题' },
+      { pattern: /^单选\s*/, type: '单选题' },
+      { pattern: /^判断\s*/, type: '判断题' },
+      { pattern: /^填空\s*/, type: '填空题' },
+      { pattern: /^多选题\s*/, type: '多选题' },
+      { pattern: /^单选题\s*/, type: '单选题' },
+      { pattern: /^判断题\s*/, type: '判断题' },
+      { pattern: /^填空题\s*/, type: '填空题' }
+    ];
+    
+    for (const typePattern of typePatterns) {
+      const match = text.match(typePattern.pattern);
+      if (match) {
+        return {
+          type: typePattern.type,
+          match: match[0]
+        };
+      }
+    }
+    
+    return {
+      type: null,
+      match: ''
+    };
   }
 
   /**
@@ -542,6 +654,23 @@ class DocumentParser {
   }
 
   /**
+   * 匹配选项标记和第一个选项（选项：A.选项内容）
+   */
+  matchOptionMarkerWithFirstOption(line) {
+    const match = line.match(/^选项[：:]\s*([A-Z][\.、]\s*(.+))/i);
+    if (match) {
+      return {
+        hasMarker: true,
+        firstOption: {
+          key: match[1].charAt(0),
+          content: match[2]
+        }
+      };
+    }
+    return null;
+  }
+
+  /**
    * 判断是否是特殊行（选项、答案、解析等）
    */
   isSpecialLine(line) {
@@ -554,26 +683,87 @@ class DocumentParser {
   }
 
   /**
+   * 根据题目内容和选项推断题目类型
+   */
+  inferQuestionType(question, options) {
+    const content = question.content.toLowerCase();
+    const optionCount = options.length;
+    
+    // 根据题目内容中的关键词推断
+    if (content.includes('下列说法正确的有') || 
+        content.includes('下列说法错误的是') ||
+        content.includes('以下说法正确的是') ||
+        content.includes('以下说法错误的是') ||
+        content.includes('正确的是') ||
+        content.includes('错误的是') ||
+        content.includes('包括') ||
+        content.includes('属于') ||
+        content.includes('哪些') ||
+        content.includes('哪些是') ||
+        content.includes('哪些属于')) {
+      return '多选题';
+    }
+    
+    if (content.includes('下列说法正确的是') || 
+        content.includes('下列说法错误的是') ||
+        content.includes('以下说法正确的是') ||
+        content.includes('以下说法错误的是') ||
+        content.includes('正确的是') ||
+        content.includes('错误的是') ||
+        content.includes('哪个') ||
+        content.includes('哪一个是') ||
+        content.includes('哪项') ||
+        content.includes('哪一项')) {
+      return '单选题';
+    }
+    
+    if (content.includes('是否正确') || 
+        content.includes('是否错误') ||
+        content.includes('是否') ||
+        content.includes('判断') ||
+        content.includes('对错') ||
+        content.includes('正误')) {
+      return '判断题';
+    }
+    
+    if (content.includes('填空') || 
+        content.includes('填写') ||
+        content.includes('填入') ||
+        content.includes('补充')) {
+      return '填空题';
+    }
+    
+    // 根据选项数量推断
+    if (optionCount === 0) {
+      return '填空题';
+    } else if (optionCount === 2) {
+      // 检查选项内容是否像判断题
+      const optionTexts = options.map(opt => opt.content.toLowerCase());
+      if (optionTexts.some(text => text.includes('正确') || text.includes('错误') || 
+                                   text.includes('对') || text.includes('错') ||
+                                   text.includes('是') || text.includes('否'))) {
+        return '判断题';
+      }
+      return '单选题';
+    } else if (optionCount > 4) {
+      return '多选题';
+    } else {
+      return '单选题';
+    }
+  }
+
+  /**
    * 完成题目构建
    */
   finalizeQuestion(question, options, images) {
-    // 从题目内容中识别题目类型
-    if (question.content.includes('[多选]')) {
-      question.type = '多选题';
-    } else if (question.content.includes('[单选]')) {
-      question.type = '单选题';
-    } else if (question.content.includes('[判断]')) {
-      question.type = '判断题';
-    } else if (question.content.includes('[填空]')) {
-      question.type = '填空题';
-    } else {
-      // 根据选项数量推断题目类型
-      if (options.length > 4) {
-        question.type = '多选题'; // 多选题
-      } else if (options.length === 2) {
-        question.type = '判断题'; // 判断题
+    // 如果题目类型还没有确定，尝试从题目内容中识别
+    if (!question.type || question.type === '单选题') {
+      const contentTypeMatch = this.extractQuestionTypeFromText(question.content);
+      if (contentTypeMatch.type) {
+        question.type = contentTypeMatch.type;
       } else {
-        question.type = '单选题'; // 默认单选题
+        // 根据选项数量和内容特征推断题目类型
+        question.type = this.inferQuestionType(question, options);
       }
     }
     
