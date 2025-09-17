@@ -121,7 +121,8 @@ class EnhancedQuestionController {
       content: questionData.content,
       options: questionData.options,
       answer: questionData.answer,
-      type: questionData.type
+      type: questionData.type,
+      explanation: questionData.explanation
     });
     
     // 处理选项
@@ -141,7 +142,7 @@ class EnhancedQuestionController {
       type: questionData.type,
       options: JSON.stringify(options),
       answer: questionData.answer,
-      explanation: questionData.explanation,
+      analysis: questionData.explanation, // 修复字段映射：explanation -> analysis
       images: JSON.stringify(images),
       questionBankId: questionBankId,
       subjectId: subjectId,
