@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-title 启动后台管理系统（简单模式）
+title 启动后台管理系统
 
-echo 🚀 启动后台管理系统（简单模式）...
+echo 🚀 启动后台管理系统...
 echo.
 
 REM 进入admin目录
@@ -31,11 +31,24 @@ echo.
 REM 检查端口3001是否被占用
 netstat -an | findstr :3001 >nul
 if not errorlevel 1 (
-    echo ⚠️  端口3001已被占用，正在结束占用进程...
+    echo ⚠️  端口3001已被占用
+    echo 🔍 正在查找占用进程...
     for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3001') do (
-        taskkill /f /pid %%a >nul 2>&1
+        echo 进程ID: %%a
+        tasklist /fi "pid eq %%a"
     )
-    timeout /t 2 >nul
+    echo.
+    set /p KILL_PROCESS="是否要结束占用进程？(y/n): "
+    if /i "%KILL_PROCESS%"=="y" (
+        for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3001') do (
+            taskkill /f /pid %%a
+        )
+        echo ✅ 进程已结束
+    ) else (
+        echo ❌ 取消启动
+        pause
+        exit /b 1
+    )
 )
 
 echo 🌐 启动admin服务...
@@ -43,28 +56,7 @@ echo 访问地址: http://223.93.139.87:3001
 echo 按 Ctrl+C 停止服务
 echo.
 
-REM 使用Python内置服务器（如果可用）
-python --version >nul 2>&1
-if not errorlevel 1 (
-    echo 使用Python内置服务器...
-    cd dist
-    python -m http.server 3001 --bind 0.0.0.0
-    goto end
-)
+REM 启动vite预览服务器
+call npm run serve
 
-REM 使用Node.js http-server（如果可用）
-where http-server >nul 2>&1
-if not errorlevel 1 (
-    echo 使用http-server...
-    cd dist
-    http-server -p 3001 -a 0.0.0.0
-    goto end
-)
-
-REM 使用npx http-server
-echo 使用npx http-server...
-cd dist
-npx http-server -p 3001 -a 0.0.0.0
-
-:end
 pause

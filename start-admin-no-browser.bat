@@ -1,8 +1,8 @@
 @echo off
 chcp 65001 >nul
-title 启动后台管理系统（简单模式）
+title 启动后台管理系统（无浏览器）
 
-echo 🚀 启动后台管理系统（简单模式）...
+echo 🚀 启动后台管理系统（无浏览器模式）...
 echo.
 
 REM 进入admin目录
@@ -43,28 +43,7 @@ echo 访问地址: http://223.93.139.87:3001
 echo 按 Ctrl+C 停止服务
 echo.
 
-REM 使用Python内置服务器（如果可用）
-python --version >nul 2>&1
-if not errorlevel 1 (
-    echo 使用Python内置服务器...
-    cd dist
-    python -m http.server 3001 --bind 0.0.0.0
-    goto end
-)
+REM 使用vite preview命令启动（不会自动打开浏览器）
+call npx vite preview --host 0.0.0.0 --port 3001
 
-REM 使用Node.js http-server（如果可用）
-where http-server >nul 2>&1
-if not errorlevel 1 (
-    echo 使用http-server...
-    cd dist
-    http-server -p 3001 -a 0.0.0.0
-    goto end
-)
-
-REM 使用npx http-server
-echo 使用npx http-server...
-cd dist
-npx http-server -p 3001 -a 0.0.0.0
-
-:end
 pause

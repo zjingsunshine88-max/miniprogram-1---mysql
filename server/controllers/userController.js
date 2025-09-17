@@ -835,12 +835,13 @@ const adminLogin = async (ctx) => {
       return;
     }
 
-    // 查找管理员用户（通过用户名或手机号）
+    // 查找管理员用户（通过用户名、手机号或邮箱）
     const user = await User.findOne({ 
       where: { 
         [require('sequelize').Op.or]: [
           { nickName: username },
-          { phoneNumber: username }
+          { phoneNumber: username },
+          { email: username }
         ]
       } 
     });
@@ -902,6 +903,309 @@ const adminLogin = async (ctx) => {
   }
 };
 
+// 获取用户列表（管理员）
+const getUserList = async (ctx) => {
+  try {
+    const { page = 1, limit = 10, keyword = '', status = '', isAdmin = '' } = ctx.query;
+    const offset = (page - 1) * limit;
+    
+    // 构建查询条件
+    const where = {};
+    
+    if (keyword) {
+      where[require('sequelize').Op.or] = [
+        { nickName: { [require('sequelize').Op.like]: `%${keyword}%` } },
+        { phoneNumber: { [require('sequelize').Op.like]: `%${keyword}%` } },
+        { email: { [require('sequelize').Op.like]: `%${keyword}%` } }
+      ];
+    }
+    
+    if (status) {
+      where.status = status;
+    }
+    
+    if (isAdmin !== '') {
+      where.isAdmin = isAdmin === 'true';
+    }
+    
+    // 查询用户列表
+    const { count, rows: users } = await User.findAndCountAll({
+      where,
+      attributes: { exclude: ['password'] },
+      order: [['createdAt', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+    
+    ctx.body = {
+      code: 200,
+      message: '获取用户列表成功',
+      data: {
+        users,
+        pagination: {
+          total: count,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(count / limit)
+        }
+      }
+    };
+  } catch (error) {
+    console.error('获取用户列表失败:', error);
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '服务器内部错误'
+    };
+  }
+};
+
+// 创建用户（管理员）
+const createUser = async (ctx) => {
+  try {
+    const { nickName, phoneNumber, email, password, isAdmin = false, status = 'active' } = ctx.request.body;
+    
+    // 验证必填字段
+    if (!nickName) {
+      ctx.status = 400;
+      ctx.body = {
+        code: 400,
+        message: '用户昵称不能为空'
+      };
+      return;
+    }
+    
+    // 检查手机号是否已存在
+    if (phoneNumber) {
+      const existingUser = await User.findOne({ where: { phoneNumber } });
+      if (existingUser) {
+        ctx.status = 400;
+        ctx.body = {
+          code: 400,
+          message: '手机号已被使用'
+        };
+        return;
+      }
+    }
+    
+    // 检查邮箱是否已存在
+    if (email) {
+      const existingUser = await User.findOne({ where: { email } });
+      if (existingUser) {
+        ctx.status = 400;
+        ctx.body = {
+          code: 400,
+          message: '邮箱已被使用'
+        };
+        return;
+      }
+    }
+    
+    // 创建用户
+    const user = await User.create({
+      nickName,
+      phoneNumber,
+      email,
+      password: password || null,
+      isAdmin: Boolean(isAdmin),
+      status
+    });
+    
+    ctx.body = {
+      code: 200,
+      message: '用户创建成功',
+      data: {
+        user: {
+          id: user.id,
+          nickName: user.nickName,
+          phoneNumber: user.phoneNumber,
+          email: user.email,
+          isAdmin: user.isAdmin,
+          status: user.status,
+          createdAt: user.createdAt
+        }
+      }
+    };
+  } catch (error) {
+    console.error('创建用户失败:', error);
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '服务器内部错误'
+    };
+  }
+};
+
+// 更新用户信息（管理员）
+const updateUser = async (ctx) => {
+  try {
+    const { id } = ctx.params;
+    const { nickName, phoneNumber, email, password, isAdmin, status } = ctx.request.body;
+    
+    // 查找用户
+    const user = await User.findByPk(id);
+    if (!user) {
+      ctx.status = 404;
+      ctx.body = {
+        code: 404,
+        message: '用户不存在'
+      };
+      return;
+    }
+    
+    // 检查手机号是否被其他用户使用
+    if (phoneNumber && phoneNumber !== user.phoneNumber) {
+      const existingUser = await User.findOne({ 
+        where: { 
+          phoneNumber,
+          id: { [require('sequelize').Op.ne]: id }
+        } 
+      });
+      if (existingUser) {
+        ctx.status = 400;
+        ctx.body = {
+          code: 400,
+          message: '手机号已被其他用户使用'
+        };
+        return;
+      }
+    }
+    
+    // 检查邮箱是否被其他用户使用
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ 
+        where: { 
+          email,
+          id: { [require('sequelize').Op.ne]: id }
+        } 
+      });
+      if (existingUser) {
+        ctx.status = 400;
+        ctx.body = {
+          code: 400,
+          message: '邮箱已被其他用户使用'
+        };
+        return;
+      }
+    }
+    
+    // 更新用户信息
+    const updateData = {};
+    if (nickName !== undefined) updateData.nickName = nickName;
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
+    if (email !== undefined) updateData.email = email;
+    if (password !== undefined) updateData.password = password;
+    if (isAdmin !== undefined) updateData.isAdmin = Boolean(isAdmin);
+    if (status !== undefined) updateData.status = status;
+    
+    await user.update(updateData);
+    
+    ctx.body = {
+      code: 200,
+      message: '用户信息更新成功',
+      data: {
+        user: {
+          id: user.id,
+          nickName: user.nickName,
+          phoneNumber: user.phoneNumber,
+          email: user.email,
+          isAdmin: user.isAdmin,
+          status: user.status,
+          updatedAt: user.updatedAt
+        }
+      }
+    };
+  } catch (error) {
+    console.error('更新用户失败:', error);
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '服务器内部错误'
+    };
+  }
+};
+
+// 删除用户（管理员）
+const deleteUser = async (ctx) => {
+  try {
+    const { id } = ctx.params;
+    
+    // 查找用户
+    const user = await User.findByPk(id);
+    if (!user) {
+      ctx.status = 404;
+      ctx.body = {
+        code: 404,
+        message: '用户不存在'
+      };
+      return;
+    }
+    
+    // 不能删除自己
+    const currentUserId = ctx.state.user?.userId;
+    if (currentUserId && parseInt(id) === currentUserId) {
+      ctx.status = 400;
+      ctx.body = {
+        code: 400,
+        message: '不能删除自己的账户'
+      };
+      return;
+    }
+    
+    // 删除用户
+    await user.destroy();
+    
+    ctx.body = {
+      code: 200,
+      message: '用户删除成功'
+    };
+  } catch (error) {
+    console.error('删除用户失败:', error);
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '服务器内部错误'
+    };
+  }
+};
+
+// 重置用户密码（管理员）
+const resetUserPassword = async (ctx) => {
+  try {
+    const { id } = ctx.params;
+    const { password = '123456' } = ctx.request.body;
+    
+    // 查找用户
+    const user = await User.findByPk(id);
+    if (!user) {
+      ctx.status = 404;
+      ctx.body = {
+        code: 404,
+        message: '用户不存在'
+      };
+      return;
+    }
+    
+    // 更新密码
+    await user.update({ password });
+    
+    ctx.body = {
+      code: 200,
+      message: '密码重置成功',
+      data: {
+        newPassword: password
+      }
+    };
+  } catch (error) {
+    console.error('重置密码失败:', error);
+    ctx.status = 500;
+    ctx.body = {
+      code: 500,
+      message: '服务器内部错误'
+    };
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -913,5 +1217,10 @@ module.exports = {
   loginWithVerificationCode,
   loginWithPhone,
   getStats,
-  checkAdminPermission
+  checkAdminPermission,
+  getUserList,
+  createUser,
+  updateUser,
+  deleteUser,
+  resetUserPassword
 };

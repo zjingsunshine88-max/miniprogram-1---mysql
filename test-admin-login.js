@@ -1,102 +1,58 @@
-// 管理员登录测试脚本
 const axios = require('axios');
 
-// 测试管理员登录
-const testAdminLogin = async () => {
+async function testAdminLogin() {
   try {
-    console.log('🧪 测试管理员登录...');
+    console.log('测试管理员登录...');
     
-    const response = await axios.post('http://localhost:3002/api/user/admin-login', {
-      phoneNumber: '13800138000',
-      password: '' // 管理员默认无密码
+    // 测试使用邮箱登录
+    const response1 = await axios.post('http://223.93.139.87:3002/api/user/admin-login', {
+      username: 'admin@example.com',
+      password: '123456'
     });
     
-    if (response.data.code === 200) {
-      console.log('✅ 管理员登录成功!');
-      console.log('📋 登录信息:', {
-        token: response.data.data.token ? '已获取' : '未获取',
-        user: response.data.data.user
-      });
-      
-      // 保存token到文件（用于测试）
-      const fs = require('fs');
-      fs.writeFileSync('admin-token.txt', response.data.data.token || '');
-      console.log('💾 Token已保存到 admin-token.txt');
-      
+    console.log('✅ 邮箱登录成功:', response1.data);
+    
+  } catch (error) {
+    if (error.response) {
+      console.log('❌ 邮箱登录失败:', error.response.data);
     } else {
-      console.log('❌ 管理员登录失败:', response.data.message);
-    }
-    
-  } catch (error) {
-    console.error('❌ 管理员登录测试失败:', error.message);
-    
-    if (error.response) {
-      console.log('📋 错误详情:', {
-        status: error.response.status,
-        data: error.response.data
-      });
+      console.log('❌ 请求失败:', error.message);
     }
   }
-};
-
-// 测试API调用（使用token）
-const testAPIWithToken = async () => {
+  
   try {
-    console.log('\n🧪 测试API调用...');
-    
-    const fs = require('fs');
-    let token = '';
-    
-    try {
-      token = fs.readFileSync('admin-token.txt', 'utf8').trim();
-    } catch (e) {
-      console.log('❌ 未找到token文件，请先运行登录测试');
-      return;
-    }
-    
-    if (!token) {
-      console.log('❌ Token为空，请先运行登录测试');
-      return;
-    }
-    
-    // 测试激活码API
-    const response = await axios.get('http://localhost:3002/api/activation-code?page=1&limit=10', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+    // 测试使用用户名登录
+    const response2 = await axios.post('http://223.93.139.87:3002/api/user/admin-login', {
+      username: 'admin',
+      password: '123456'
     });
     
-    console.log('✅ API调用成功!');
-    console.log('📋 响应数据:', response.data);
+    console.log('✅ 用户名登录成功:', response2.data);
     
   } catch (error) {
-    console.error('❌ API调用测试失败:', error.message);
-    
     if (error.response) {
-      console.log('📋 错误详情:', {
-        status: error.response.status,
-        data: error.response.data
-      });
+      console.log('❌ 用户名登录失败:', error.response.data);
+    } else {
+      console.log('❌ 请求失败:', error.message);
     }
   }
-};
-
-// 主函数
-const main = async () => {
-  console.log('🚀 管理员认证测试开始...\n');
   
-  await testAdminLogin();
-  await testAPIWithToken();
-  
-  console.log('\n✅ 测试完成!');
-  console.log('💡 如果测试成功，说明管理员认证正常');
-  console.log('💡 如果测试失败，请检查数据库连接和用户创建');
-};
-
-// 运行测试
-if (require.main === module) {
-  main().catch(console.error);
+  try {
+    // 测试使用手机号登录
+    const response3 = await axios.post('http://223.93.139.87:3002/api/user/admin-login', {
+      username: '13800138000',
+      password: '123456'
+    });
+    
+    console.log('✅ 手机号登录成功:', response3.data);
+    
+  } catch (error) {
+    if (error.response) {
+      console.log('❌ 手机号登录失败:', error.response.data);
+    } else {
+      console.log('❌ 请求失败:', error.message);
+    }
+  }
 }
 
-module.exports = { testAdminLogin, testAPIWithToken };
+testAdminLogin();

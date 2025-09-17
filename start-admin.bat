@@ -56,7 +56,7 @@ echo 访问地址: http://223.93.139.87:3001
 echo 按 Ctrl+C 停止服务
 echo.
 
-REM 启动vite预览服务器
-call npm run serve
+REM 启动vite预览服务（不自动打开浏览器）
+call npx vite preview --host 0.0.0.0 --port 3001
 
 pause

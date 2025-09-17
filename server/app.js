@@ -25,10 +25,11 @@ const app = new Koa();
 const router = new Router();
 
 
-// 配置CORS，允许小程序和后台管理系统访问
+// 配置CORS，允许小程序和后台管理系统访
 app.use(cors({
   origin: [
-    '*'  // 微信开发者工具
+    'http://223.93.139.87:3001',
+    'http://localhost:3001'
   ],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -36,7 +37,7 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// 解析请求体
+// 解析请求
 app.use(bodyParser());
 
 // 静态文件服务
@@ -52,7 +53,7 @@ app.use(async (ctx, next) => {
       code: ctx.status,
       message: err.message || '服务器内部错误'
     };
-    console.error('服务器错误:', err);
+    console.error('服务器错误', err);
   }
 });
 
@@ -124,7 +125,7 @@ app.use(async (ctx) => {
   };
 });
 
-// 启动服务器
+// 启动服务
 const PORT = process.env.PORT || 3002;
 
 const startServer = async () => {
@@ -132,16 +133,16 @@ const startServer = async () => {
     // 测试数据库连接
     const dbConnected = await testConnection();
     if (!dbConnected) {
-      console.error('❌ 数据库连接失败，服务器启动失败');
+      console.error('数据库连接失败，服务器启动失败');
       process.exit(1);
     }
 
-    // 同步数据库模型 - 使用force: false避免修改现有表结构
+    // 同步数据库模型- 使用force: false避免修改现有表结构
     try {
       await sequelize.sync({ force: false });
-      console.log('✅ 数据库模型同步完成');
+      console.log('数据库模型同步完成');
     } catch (syncError) {
-      console.warn('⚠️ 数据库同步警告:', syncError.message);
+      console.warn('⚠️ 数据库同步警告', syncError.message);
       console.log('📝 继续启动服务器，但某些表结构可能未完全同步');
     }
 
@@ -152,19 +153,19 @@ const startServer = async () => {
       console.log(`📍 API文档: http://localhost:${PORT}/api`);
     });
   } catch (error) {
-    console.error('❌ 服务器启动失败:', error);
+    console.error('服务器启动失败', error);
     process.exit(1);
   }
 };
 
 // 优雅关闭
 process.on('SIGINT', () => {
-  console.log('\n🛑 正在关闭服务器...');
+  console.log('\n🛑 正在关闭服务...');
   process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-  console.log('\n🛑 正在关闭服务器...');
+  console.log('\n🛑 正在关闭服务...');
   process.exit(0);
 });
 

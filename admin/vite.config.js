@@ -1,16 +1,15 @@
-import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import { resolve } from 'path'
+import { defineConfig, loadEnv } from "vite"
+import vue from "@vitejs/plugin-vue"
+import { resolve } from "path"
 
 export default defineConfig(({ command, mode }) => {
-  // 鍔犺浇鐜鍙橀噺
-  const env = loadEnv(mode, process.cwd(), '')
+  const env = loadEnv(mode, process.cwd(), "")
   
   return {
     plugins: [vue()],
     resolve: {
       alias: {
-        '@': resolve(__dirname, 'src')
+        "@": resolve(__dirname, "src")
       }
     },
     server: {
@@ -18,31 +17,24 @@ export default defineConfig(({ command, mode }) => {
       open: true
     },
     build: {
-      // 鐢熶骇鐜鏋勫缓閰嶇疆
-      outDir: 'dist',
-      assetsDir: 'assets',
+      outDir: "dist",
+      assetsDir: "assets",
       sourcemap: false,
-      minify: 'terser',
+      minify: "terser",
       rollupOptions: {
         output: {
-          // 鍒嗗寘閰嶇疆
-          manualChunks: {
-            'element-plus': ['element-plus'],
-            'vue-vendor': ['vue', 'vue-router'],
-            'echarts': ['echarts']
-          }
+          // 修复模块初始化问题 - 禁用分包
+          manualChunks: undefined
         }
       },
-      // 鐢熶骇鐜鍏抽棴console
       terserOptions: {
         compress: {
-          drop_console: command === 'build',
-          drop_debugger: command === 'build'
+          drop_console: command === "build",
+          drop_debugger: command === "build"
         }
       }
     },
     define: {
-      // 鐜鍙橀噺
       __VUE_OPTIONS_API__: true,
       __VUE_PROD_DEVTOOLS__: false
     }

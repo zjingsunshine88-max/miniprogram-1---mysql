@@ -18,6 +18,13 @@ router.post('/admin-login', userController.adminLogin);
 // 微信登录
 router.post('/wechat-login', userController.wechatLogin);
 
+// 用户管理相关API（需要管理员权限）
+router.get('/list', auth, userController.getUserList);
+router.post('/create', auth, userController.createUser);
+router.put('/:id', auth, userController.updateUser);
+router.delete('/:id', auth, userController.deleteUser);
+router.post('/:id/reset-password', auth, userController.resetUserPassword);
+
 // 发送验证码
 router.post('/send-verification-code', userController.sendVerificationCode);
 
