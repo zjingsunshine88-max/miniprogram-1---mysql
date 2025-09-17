@@ -340,6 +340,7 @@ class DocumentParser {
       let currentQuestion = null;
       let currentOptions = [];
       let currentImages = [];
+      let parsingState = 'question'; // 解析状态：question, title, options, answer, explanation
       
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -364,47 +365,75 @@ class DocumentParser {
           };
           currentOptions = [];
           currentImages = [];
+          parsingState = 'question'; // 重置解析状态
           continue;
         }
         
+        // 检查是否是题目标记
+        if (this.matchTitleMarker(line)) {
+          parsingState = 'title';
+          continue;
+        }
+        
+        // 检查是否是选项标记
+        if (this.matchOptionMarker(line)) {
+          parsingState = 'options';
+          continue;
+        }
+        
+        // 根据解析状态处理内容
+        if (!currentQuestion) continue;
+        
         // 检查是否是选项
         const optionMatch = this.matchOption(line);
-        if (optionMatch && currentQuestion) {
+        if (optionMatch) {
           currentOptions.push({
             key: optionMatch.key,
             content: optionMatch.content
           });
+          parsingState = 'options';
           continue;
         }
         
         // 检查是否是答案
         const answerMatch = this.matchAnswer(line);
-        if (answerMatch && currentQuestion) {
+        if (answerMatch) {
           currentQuestion.answer = answerMatch.answer;
+          parsingState = 'answer';
           continue;
         }
         
         // 检查是否是解析
         const explanationMatch = this.matchExplanation(line);
-        if (explanationMatch && currentQuestion) {
+        if (explanationMatch) {
           currentQuestion.explanation = explanationMatch.explanation;
+          parsingState = 'explanation';
           continue;
         }
         
-        // 如果当前题目已经有解析开始标记，继续收集解析内容
-        if (currentQuestion && currentQuestion.explanation !== undefined && !this.isSpecialLine(line)) {
-          // 去掉行开头的冒号
-          let cleanLine = line.replace(/^[：:]\s*/, '').trim();
-          currentQuestion.explanation += '\n' + cleanLine;
-          continue;
-        }
-        
-        // 如果当前有题目，这可能是题目内容的延续
-        if (currentQuestion && !this.isSpecialLine(line)) {
+        // 根据解析状态处理普通内容
+        if (parsingState === 'title' || parsingState === 'question') {
+          // 收集题目内容
           if (currentQuestion.content) {
             currentQuestion.content += '\n' + line;
           } else {
             currentQuestion.content = line;
+          }
+        } else if (parsingState === 'options') {
+          // 在选项状态下，如果不是选项格式，可能是选项内容的延续
+          if (!this.matchOption(line) && !this.matchAnswer(line) && !this.matchExplanation(line)) {
+            // 如果最后一个选项存在，则添加到最后一个选项
+            if (currentOptions.length > 0) {
+              currentOptions[currentOptions.length - 1].content += '\n' + line;
+            }
+          }
+        } else if (parsingState === 'explanation') {
+          // 收集解析内容
+          let cleanLine = line.replace(/^[：:]\s*/, '').trim();
+          if (currentQuestion.explanation) {
+            currentQuestion.explanation += '\n' + cleanLine;
+          } else {
+            currentQuestion.explanation = cleanLine;
           }
         }
       }
@@ -499,13 +528,29 @@ class DocumentParser {
   }
 
   /**
+   * 匹配题目标记（题目：）
+   */
+  matchTitleMarker(line) {
+    return /^题目[：:]\s*$/i.test(line.trim());
+  }
+
+  /**
+   * 匹配选项标记（选项：）
+   */
+  matchOptionMarker(line) {
+    return /^选项[：:]\s*$/i.test(line.trim());
+  }
+
+  /**
    * 判断是否是特殊行（选项、答案、解析等）
    */
   isSpecialLine(line) {
     return this.matchOption(line) || 
            this.matchAnswer(line) || 
            this.matchExplanation(line) ||
-           this.matchQuestionNumber(line);
+           this.matchQuestionNumber(line) ||
+           this.matchTitleMarker(line) ||
+           this.matchOptionMarker(line);
   }
 
   /**
