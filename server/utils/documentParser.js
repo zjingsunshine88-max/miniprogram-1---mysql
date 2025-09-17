@@ -46,7 +46,11 @@ class DocumentParser {
         /^解析[：:]\s*(.+)/i,        // 解析：内容
         /^解答[：:]\s*(.+)/i,        // 解答：内容
         /^说明[：:]\s*(.+)/i,        // 说明：内容
-        /^分析[：:]\s*(.+)/i         // 分析：内容
+        /^分析[：:]\s*(.+)/i,        // 分析：内容
+        /^解析\s*(.+)/i,            // 解析 内容 (没有冒号)
+        /^解答\s*(.+)/i,            // 解答 内容
+        /^说明\s*(.+)/i,            // 说明 内容
+        /^分析\s*(.+)/i             // 分析 内容
       ]
     };
   }
@@ -387,6 +391,14 @@ class DocumentParser {
           continue;
         }
         
+        // 如果当前题目已经有解析开始标记，继续收集解析内容
+        if (currentQuestion && currentQuestion.explanation !== undefined && !this.isSpecialLine(line)) {
+          // 去掉行开头的冒号
+          let cleanLine = line.replace(/^[：:]\s*/, '').trim();
+          currentQuestion.explanation += '\n' + cleanLine;
+          continue;
+        }
+        
         // 如果当前有题目，这可能是题目内容的延续
         if (currentQuestion && !this.isSpecialLine(line)) {
           if (currentQuestion.content) {
@@ -465,11 +477,24 @@ class DocumentParser {
     for (const pattern of this.questionPatterns.explanation) {
       const match = line.match(pattern);
       if (match) {
+        let explanation = match[1] || ''; // 如果解析内容为空，返回空字符串
+        
+        // 去掉解析内容开头的冒号
+        explanation = explanation.replace(/^[：:]\s*/, '').trim();
+        
         return {
-          explanation: match[1]
+          explanation: explanation
         };
       }
     }
+    
+    // 检查是否是解析标记但没有内容
+    if (/^解析[：:]?\s*$/i.test(line.trim())) {
+      return {
+        explanation: ''
+      };
+    }
+    
     return null;
   }
 
