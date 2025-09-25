@@ -506,7 +506,7 @@ const importQuestions = async (ctx) => {
     });
     
     // 批量添加题目
-    const addPromises = questions.map(question => {
+    const addPromises = questions.map(async (question) => {
       // 构建选项数组
       let options = [];
       

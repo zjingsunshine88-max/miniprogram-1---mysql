@@ -77,7 +77,7 @@ start "API Server" cmd /k "npm run start:prod"
 echo ✅ API服务启动完成
 
 echo.
-echo 步骤4: 启动管理后台...
+echo 步骤4: 构建管理后台...
 cd /d "%~dp0\admin"
 
 REM 设置环境变量
@@ -86,13 +86,23 @@ set VITE_SERVER_URL=https://practice.insightdata.top
 echo 🔧 设置环境变量...
 echo VITE_SERVER_URL=https://practice.insightdata.top
 
-echo 🌐 启动管理后台...
-echo 访问地址: https://practice.insightdata.top/
-echo.
+echo 🔨 构建管理后台...
+npm run build
 
-start "Admin Frontend" cmd /k "npm run serve"
+if errorlevel 1 (
+    echo ❌ 管理后台构建失败
+    pause
+    exit /b 1
+)
 
-echo ✅ 管理后台启动完成
+echo ✅ 管理后台构建完成
+
+echo 📁 复制构建文件到Nginx目录...
+if not exist "C:\admin" mkdir C:\admin
+xcopy /E /Y "dist\*" "C:\admin\"
+
+echo ✅ 管理后台文件复制完成
+echo 📝 管理后台将通过Nginx静态文件访问: https://practice.insightdata.top/
 
 echo.
 echo 步骤5: 验证服务状态...
@@ -117,12 +127,11 @@ if errorlevel 1 (
     echo ✅ API服务端口3002监听正常
 )
 
-REM 检查管理后台
-netstat -an | findstr :3000 >nul
-if errorlevel 1 (
-    echo ❌ 管理后台端口3000未监听
+REM 检查管理后台静态文件
+if exist "C:\admin\index.html" (
+    echo ✅ 管理后台静态文件存在
 ) else (
-    echo ✅ 管理后台端口3000监听正常
+    echo ❌ 管理后台静态文件不存在
 )
 
 echo.
