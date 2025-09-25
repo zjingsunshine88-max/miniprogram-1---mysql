@@ -25,7 +25,15 @@ class EnhancedQuestionController {
 
       const { questionBankId, subjectId, fileType } = ctx.request.body;
       
-      if (!questionBankId || !subjectId) {
+      console.log('=== 智能上传参数 ===');
+      console.log('questionBankId:', questionBankId);
+      console.log('subjectId:', subjectId);
+      console.log('fileType:', fileType);
+      console.log('subjectId类型:', typeof subjectId);
+      console.log('subjectId是否为空字符串:', subjectId === '');
+      console.log('========================');
+      
+      if (!questionBankId || !subjectId || subjectId === '') {
         ctx.body = { code: 400, message: '请选择题库和科目' };
         return;
       }
@@ -74,10 +82,17 @@ class EnhancedQuestionController {
         const validQuestions = parsedQuestions.filter(q => q.isValid);
         const invalidQuestions = parsedQuestions.filter(q => !q.isValid);
 
+        // 验证subjectId是否为有效数字
+        const subjectIdNum = parseInt(subjectId);
+        if (isNaN(subjectIdNum) || subjectIdNum <= 0) {
+          ctx.body = { code: 400, message: '科目ID无效' };
+          return;
+        }
+
         // 保存题目到数据库
         const savedQuestions = [];
         for (const questionData of validQuestions) {
-          const question = await this.saveQuestion(questionData, questionBankId, subjectId, userId);
+          const question = await this.saveQuestion(questionData, questionBankId, subjectIdNum, userId);
           savedQuestions.push(question);
         }
 

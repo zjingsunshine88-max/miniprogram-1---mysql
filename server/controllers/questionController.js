@@ -565,6 +565,38 @@ const importQuestions = async (ctx) => {
         answer: normalizedAnswer
       });
       
+      // 处理科目ID
+      let subjectId = question.subjectId;
+      
+      // 如果没有subjectId但有subject名称，需要查找对应的科目ID
+      if (!subjectId && question.subject) {
+        try {
+          const subject = await Subject.findOne({
+            where: { name: question.subject }
+          });
+          if (subject) {
+            subjectId = subject.id;
+          } else {
+            console.error('找不到科目:', question.subject);
+            // 创建一个新的科目
+            const newSubject = await Subject.create({
+              name: question.subject,
+              description: question.subject,
+              questionBankId: question.questionBankId || 1
+            });
+            subjectId = newSubject.id;
+          }
+        } catch (error) {
+          console.error('处理科目失败:', error);
+          subjectId = 1; // 使用默认科目ID
+        }
+      }
+      
+      // 如果仍然没有subjectId，使用默认值
+      if (!subjectId) {
+        subjectId = 1; // 默认科目ID
+      }
+
       return Question.create({
         type: question.type || '单选题',
         content: question.content,
@@ -573,8 +605,8 @@ const importQuestions = async (ctx) => {
         analysis: question.analysis || '',
         images: images,
         difficulty: question.difficulty || '中等',
-        questionBankId: question.questionBankId,
-        subjectId: question.subjectId,
+        questionBankId: question.questionBankId || 1,
+        subjectId: subjectId,
         chapter: question.chapter || '',
         createBy: userId
       });

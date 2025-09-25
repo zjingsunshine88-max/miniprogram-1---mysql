@@ -20,7 +20,7 @@ module.exports = {
   // 服务器配置
   server: {
     port: process.env.PORT || 3002,
-    host: process.env.HOST || '223.93.139.87'
+    host: process.env.HOST || '0.0.0.0' // 监听所有接口，由Nginx处理域名
   },
   
   // JWT配置
@@ -38,7 +38,7 @@ module.exports = {
   
   // 跨域配置
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://223.93.139.87', 'http://223.93.139.87:3000', 'http://223.93.139.87:3001'],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['https://practice.insightdata.top'],
     credentials: true
   },
   
