@@ -203,13 +203,18 @@ taskschd.msc
 # 创建证书目录
 mkdir C:\certificates
 
-# 复制证书文件
-copy "证书文件.crt" C:\certificates\practice.insightdata.top.crt
-copy "私钥文件.key" C:\certificates\practice.insightdata.top.key
+# 复制证书文件（.pem文件就是证书文件）
+copy "practice.insightdata.top.pem" C:\certificates\practice.insightdata.top.pem
+copy "practice.insightdata.top.key" C:\certificates\practice.insightdata.top.key
 
 # 设置文件权限
 icacls C:\certificates /grant "IIS_IUSRS:(OI)(CI)F"
 ```
+
+### 证书文件格式说明
+- `.pem` 文件 = 证书文件（等同于.crt文件）
+- `.key` 文件 = 私钥文件
+- 您的证书文件格式是完全正确的！
 
 ### 2. 启动服务
 ```powershell

@@ -16,8 +16,8 @@ REM 进入项目根目录
 cd /d "%~dp0"
 
 echo 步骤1: 检查证书文件...
-if not exist "C:\certificates\practice.insightdata.top.crt" (
-    echo ❌ SSL证书文件不存在: C:\certificates\practice.insightdata.top.crt
+if not exist "C:\certificates\practice.insightdata.top.pem" (
+    echo ❌ SSL证书文件不存在: C:\certificates\practice.insightdata.top.pem
     echo 💡 请按照 WINDOWS_SSL_SETUP_GUIDE.md 配置SSL证书
     pause
     exit /b 1
