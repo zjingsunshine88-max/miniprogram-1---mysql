@@ -1,8 +1,13 @@
 @echo off
 chcp 65001 >nul
-title 启动API服务器
+title 启动API服务器 (8443端口)
 
-echo 🚀 启动API服务器...
+echo 🚀 启动API服务器 (8443端口)...
+echo.
+echo 📋 服务配置:
+echo - 本地端口: 3002
+echo - HTTPS端口: 8443
+echo - 域名: practice.insightdata.top
 echo.
 
 REM 进入server目录
@@ -22,6 +27,7 @@ REM 设置环境变量
 echo 🔧 设置环境变量...
 set NODE_ENV=production
 echo NODE_ENV=production
+echo [信息] 生产环境模式，API将通过nginx 8443端口对外提供服务
 
 REM 检查端口3002是否被占用
 netstat -an | findstr :3002 >nul
@@ -47,7 +53,9 @@ if not errorlevel 1 (
 )
 
 echo 🌐 启动API服务器...
-echo 访问地址: http://223.93.139.87:3002
+echo 本地访问地址: http://localhost:3002
+echo HTTPS访问地址: https://practice.insightdata.top:8443/api/
+echo 健康检查: https://practice.insightdata.top:8443/health
 echo 按 Ctrl+C 停止服务
 echo.
 
