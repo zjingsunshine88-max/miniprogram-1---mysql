@@ -929,7 +929,7 @@ const getImageUrl = (imagePath) => {
   
   // 如果是相对路径，添加服务器地址
   if (imagePath.startsWith('/images/')) {
-    return `http://localhost:3002${imagePath}`
+    return `https://practice.insightdata.top${imagePath}`
   }
   
   return imagePath

@@ -13,7 +13,7 @@ const callServerAPI = async (endpoint, options = {}) => {
   }
 
   try {
-    const response = await fetch(`http://223.93.139.87:3002${endpoint}`, config)
+    const response = await fetch(`https://practice.insightdata.top${endpoint}`, config)
     const data = await response.json()
     
     if (!response.ok) {

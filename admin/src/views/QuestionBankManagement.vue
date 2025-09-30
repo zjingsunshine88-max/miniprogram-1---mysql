@@ -663,7 +663,7 @@ const createForm = ref({
 const createFormRef = ref(null)
 
 // 图片上传相关
-const uploadUrl = ref('http://localhost:3002/api/upload/image')
+const uploadUrl = ref('https://practice.insightdata.top/api/upload/image')
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
@@ -1161,7 +1161,7 @@ const getImageUrl = (path) => {
     cleanPath = `images/${cleanPath}`
   }
   
-  const url = `http://localhost:3002/uploads/${cleanPath}`
+  const url = `https://practice.insightdata.top/uploads/${cleanPath}`
   console.log('获取图片URL - 生成URL:', url)
   return url
 }
@@ -1527,7 +1527,7 @@ const handleCreateImageRemove = (file, fileList) => {
 
 // 获取服务器URL和token的辅助方法
 const getServerUrl = () => {
-  return import.meta.env.VITE_SERVER_URL || 'http://localhost:3002'
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
 }
 
 const getToken = () => {

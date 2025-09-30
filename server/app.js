@@ -151,6 +151,8 @@ const startServer = async () => {
       console.log(`📍 本地访问: http://localhost:${PORT}`);
       console.log(`📍 健康检查: http://localhost:${PORT}/health`);
       console.log(`📍 API文档: http://localhost:${PORT}/api`);
+      console.log(`🌐 HTTPS访问: https://practice.insightdata.top/api/`);
+      console.log(`🌐 HTTPS健康检查: https://practice.insightdata.top/health`);
     });
   } catch (error) {
     console.error('服务器启动失败', error);

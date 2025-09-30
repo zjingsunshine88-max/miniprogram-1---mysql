@@ -527,7 +527,7 @@ const editForm = ref({
 })
 
 // 图片上传相关
-const uploadUrl = ref('http://localhost:3002/api/upload/image')
+const uploadUrl = ref('https://practice.insightdata.top/api/upload/image')
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
@@ -887,7 +887,7 @@ const getImageUrl = (path) => {
     return ''
   }
   if (path.startsWith('http')) return path
-  return `http://localhost:3002/uploads/${path}`
+  return `https://practice.insightdata.top/uploads/${path}`
 }
 
 // 获取图片预览列表

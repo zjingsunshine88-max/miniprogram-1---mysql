@@ -5,7 +5,7 @@ const getToken = () => {
 
 // 服务器API基础URL
 const getServerUrl = () => {
-  return import.meta.env.VITE_SERVER_URL || 'http://localhost:3002'
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
 }
 
 // 调用服务器API

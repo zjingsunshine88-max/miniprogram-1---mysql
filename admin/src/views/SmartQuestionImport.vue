@@ -468,7 +468,7 @@ const previewParse = async () => {
     console.log('FormData中的file字段:', formData.get('file'))
     console.log('FormData中的file字段类型:', typeof formData.get('file'))
     
-    const response = await fetch('http://localhost:3002/api/enhanced-question/preview-parse', {
+    const response = await fetch('https://practice.insightdata.top/api/enhanced-question/preview-parse', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -553,7 +553,7 @@ const smartImport = async () => {
     formData.append('subjectId', importOptions.subjectId)
     formData.append('fileType', getFileExtension(file.name))
     
-    const response = await fetch('http://localhost:3002/api/enhanced-question/smart-upload', {
+    const response = await fetch('https://practice.insightdata.top/api/enhanced-question/smart-upload', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -671,7 +671,7 @@ const getImageUrl = (imagePath) => {
   
   // 如果是相对路径，添加服务器地址
   if (imagePath.startsWith('/images/')) {
-    return `http://localhost:3002${imagePath}`
+    return `https://practice.insightdata.top${imagePath}`
   }
   
   return imagePath
