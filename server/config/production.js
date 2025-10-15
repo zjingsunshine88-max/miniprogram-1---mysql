@@ -4,9 +4,9 @@ module.exports = {
   database: {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
-    username: process.env.DB_USERNAME || 'root',
+    username: process.env.DB_USERNAME || 'minipractice',
     password: process.env.DB_PASSWORD || 'LOVEjing96..',
-    database: process.env.DB_NAME || 'practice',
+    database: process.env.DB_NAME || 'minipractice',
     dialect: 'mysql',
     logging: false, // 生产环境关闭SQL日志
     pool: {
@@ -38,7 +38,11 @@ module.exports = {
   
   // 跨域配置
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['https://practice.insightdata.top'],
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [
+      'https://practice.insightdata.top',
+      'https://admin.practice.insightdata.top',
+      'https://admin.practice.insightdata.top:8443'
+    ],
     credentials: true
   },
   

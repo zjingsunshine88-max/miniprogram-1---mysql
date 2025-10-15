@@ -866,7 +866,19 @@ const adminLogin = async (ctx) => {
     }
 
     // 验证密码
-    const isValidPassword = await user.validatePassword(password);
+    let isValidPassword = false;
+    
+    if (!user.password) {
+      // 如果没有设置密码，直接返回true（适用于管理员用户）
+      isValidPassword = true;
+    } else if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+      // 如果是加密密码，使用bcrypt验证
+      isValidPassword = await user.validatePassword(password);
+    } else {
+      // 如果是明文密码，直接比较
+      isValidPassword = user.password === password;
+    }
+    
     if (!isValidPassword) {
       ctx.status = 400;
       ctx.body = {
