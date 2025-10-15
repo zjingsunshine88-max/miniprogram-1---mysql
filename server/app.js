@@ -25,11 +25,15 @@ const app = new Koa();
 const router = new Router();
 
 
-// 配置CORS，允许小程序和后台管理系统访
+// 配置CORS，允许小程序和后台管理系统访问
 app.use(cors({
   origin: [
     'http://223.93.139.87:3001',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'https://admin.practice.insightdata.top:8443',
+    'https://admin.practice.insightdata.top',
+    'http://admin.practice.insightdata.top:8443',
+    'http://admin.practice.insightdata.top'
   ],
   credentials: true,
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

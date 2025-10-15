@@ -929,7 +929,7 @@ const getImageUrl = (imagePath) => {
   
   // 如果是相对路径，添加服务器地址
   if (imagePath.startsWith('/images/')) {
-    return `https://practice.insightdata.top${imagePath}`
+    return `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}${imagePath}`
   }
   
   return imagePath

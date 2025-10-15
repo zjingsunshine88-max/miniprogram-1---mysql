@@ -138,8 +138,17 @@ const updateQuestionBank = async (ctx) => {
       return
     }
 
-    // 检查权限（只有创建者可以修改）
-    if (questionBank.createdBy !== userId) {
+    // 检查权限（创建者或管理员可以修改）
+    const { User } = require('../models')
+    const currentUser = await User.findByPk(userId)
+    
+    if (!currentUser) {
+      ctx.body = { code: 401, message: '用户不存在' }
+      return
+    }
+
+    // 如果不是管理员且不是创建者，则无权限
+    if (!currentUser.isAdmin && questionBank.createdBy !== userId) {
       ctx.body = { code: 403, message: '无权限修改此题库' }
       return
     }
@@ -193,8 +202,17 @@ const deleteQuestionBank = async (ctx) => {
       return
     }
 
-    // 检查权限（只有创建者可以删除）
-    if (questionBank.createdBy !== userId) {
+    // 检查权限（创建者或管理员可以删除）
+    const { User } = require('../models')
+    const currentUser = await User.findByPk(userId)
+    
+    if (!currentUser) {
+      ctx.body = { code: 401, message: '用户不存在' }
+      return
+    }
+
+    // 如果不是管理员且不是创建者，则无权限
+    if (!currentUser.isAdmin && questionBank.createdBy !== userId) {
       ctx.body = { code: 403, message: '无权限删除此题库' }
       return
     }

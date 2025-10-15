@@ -75,6 +75,9 @@
               <el-button size="small" type="primary" @click.stop="enterQuestionBank(bank)">
                 进入题库
               </el-button>
+              <el-button size="small" @click.stop="editQuestionBank(bank)">
+                编辑
+              </el-button>
               <el-button size="small" type="danger" @click.stop="deleteQuestionBank(bank)">
                 删除
               </el-button>
@@ -148,6 +151,9 @@
             <div class="subject-actions">
               <el-button size="small" type="primary" @click.stop="enterSubject(subject)">
                 进入科目
+              </el-button>
+              <el-button size="small" @click.stop="editSubject(subject)">
+                编辑
               </el-button>
               <el-button size="small" type="danger" @click.stop="deleteSubject(subject)">
                 删除
@@ -243,8 +249,12 @@
       </el-card>
     </div>
 
-    <!-- 创建题库对话框 -->
-    <el-dialog v-model="showCreateDialog" title="创建题库" width="500px">
+    <!-- 创建/编辑题库对话框 -->
+    <el-dialog 
+      v-model="showCreateDialog" 
+      :title="editingBank ? '编辑题库' : '创建题库'" 
+      width="500px"
+    >
       <el-form :model="createBankForm" label-width="100px">
         <el-form-item label="题库名称" required>
           <el-input v-model="createBankForm.name" placeholder="请输入题库名称" />
@@ -259,13 +269,17 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showCreateDialog = false">取消</el-button>
-        <el-button type="primary" @click="createQuestionBank">确定</el-button>
+        <el-button @click="cancelBankEdit">取消</el-button>
+        <el-button type="primary" @click="saveQuestionBank">确定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 创建科目对话框 -->
-    <el-dialog v-model="showCreateSubjectDialog" title="创建科目" width="500px">
+    <!-- 创建/编辑科目对话框 -->
+    <el-dialog 
+      v-model="showCreateSubjectDialog" 
+      :title="editingSubject ? '编辑科目' : '创建科目'" 
+      width="500px"
+    >
       <el-form :model="createSubjectForm" label-width="100px">
         <el-form-item label="科目名称" required>
           <el-input v-model="createSubjectForm.name" placeholder="请输入科目名称" />
@@ -280,8 +294,8 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showCreateSubjectDialog = false">取消</el-button>
-        <el-button type="primary" @click="createSubject">确定</el-button>
+        <el-button @click="cancelSubjectEdit">取消</el-button>
+        <el-button type="primary" @click="saveSubject">确定</el-button>
       </template>
     </el-dialog>
 
@@ -630,6 +644,8 @@ const currentQuestion = ref(null)
 const editing = ref(false)
 const saving = ref(false)
 const creating = ref(false)
+const editingBank = ref(null) // 正在编辑的题库
+const editingSubject = ref(null) // 正在编辑的科目
 
 // 编辑表单
 const editForm = ref({
@@ -663,7 +679,7 @@ const createForm = ref({
 const createFormRef = ref(null)
 
 // 图片上传相关
-const uploadUrl = ref('https://practice.insightdata.top/api/upload/image')
+const uploadUrl = ref(`${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/api/upload/image`)
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
@@ -931,48 +947,121 @@ const backToSubjects = () => {
   loadSubjects()
 }
 
-// 创建题库
-const createQuestionBank = async () => {
+// 编辑题库
+const editQuestionBank = (bank) => {
+  editingBank.value = bank
+  createBankForm.name = bank.name
+  createBankForm.description = bank.description || ''
+  showCreateDialog.value = true
+}
+
+// 取消题库编辑
+const cancelBankEdit = () => {
+  showCreateDialog.value = false
+  editingBank.value = null
+  createBankForm.name = ''
+  createBankForm.description = ''
+}
+
+// 保存题库（创建或编辑）
+const saveQuestionBank = async () => {
+  if (!createBankForm.name.trim()) {
+    ElMessage.error('请输入题库名称')
+    return
+  }
+
   try {
-    const response = await questionBankAPI.createQuestionBank(createBankForm)
-    
-    if (response.code === 200) {
-      ElMessage.success('创建题库成功')
-      showCreateDialog.value = false
-      createBankForm.name = ''
-      createBankForm.description = ''
-      loadQuestionBanks()
+    let response
+    if (editingBank.value) {
+      // 编辑模式
+      response = await questionBankAPI.updateQuestionBank(editingBank.value.id, createBankForm)
+      if (response.code === 200) {
+        ElMessage.success('题库更新成功')
+        showCreateDialog.value = false
+        editingBank.value = null
+        createBankForm.name = ''
+        createBankForm.description = ''
+        loadQuestionBanks()
+      } else {
+        ElMessage.error(response.message || '更新题库失败')
+      }
     } else {
-      ElMessage.error(response.message || '创建题库失败')
+      // 创建模式
+      response = await questionBankAPI.createQuestionBank(createBankForm)
+      if (response.code === 200) {
+        ElMessage.success('创建题库成功')
+        showCreateDialog.value = false
+        createBankForm.name = ''
+        createBankForm.description = ''
+        loadQuestionBanks()
+      } else {
+        ElMessage.error(response.message || '创建题库失败')
+      }
     }
   } catch (error) {
-    console.error('创建题库失败:', error)
-    ElMessage.error('创建题库失败: ' + error.message)
+    console.error('保存题库失败:', error)
+    ElMessage.error('保存题库失败: ' + error.message)
   }
 }
 
-// 创建科目
-const createSubject = async () => {
+// 编辑科目
+const editSubject = (subject) => {
+  editingSubject.value = subject
+  createSubjectForm.name = subject.name
+  createSubjectForm.description = subject.description || ''
+  showCreateSubjectDialog.value = true
+}
+
+// 取消科目编辑
+const cancelSubjectEdit = () => {
+  showCreateSubjectDialog.value = false
+  editingSubject.value = null
+  createSubjectForm.name = ''
+  createSubjectForm.description = ''
+}
+
+// 保存科目（创建或编辑）
+const saveSubject = async () => {
+  if (!createSubjectForm.name.trim()) {
+    ElMessage.error('请输入科目名称')
+    return
+  }
+
   try {
-    const data = {
-      ...createSubjectForm,
-      questionBankId: currentQuestionBank.value.id
-    }
-    
-    const response = await subjectAPI.createSubject(data)
-    
-    if (response.code === 200) {
-      ElMessage.success('创建科目成功')
-      showCreateSubjectDialog.value = false
-      createSubjectForm.name = ''
-      createSubjectForm.description = ''
-      loadSubjects()
+    let response
+    if (editingSubject.value) {
+      // 编辑模式
+      response = await subjectAPI.updateSubject(editingSubject.value.id, createSubjectForm)
+      if (response.code === 200) {
+        ElMessage.success('科目更新成功')
+        showCreateSubjectDialog.value = false
+        editingSubject.value = null
+        createSubjectForm.name = ''
+        createSubjectForm.description = ''
+        loadSubjects()
+      } else {
+        ElMessage.error(response.message || '更新科目失败')
+      }
     } else {
-      ElMessage.error(response.message || '创建科目失败')
+      // 创建模式
+      const data = {
+        ...createSubjectForm,
+        questionBankId: currentQuestionBank.value.id
+      }
+      response = await subjectAPI.createSubject(data)
+      if (response.code === 200) {
+        ElMessage.success('创建科目成功')
+        showCreateSubjectDialog.value = false
+        createSubjectForm.name = ''
+        createSubjectForm.description = ''
+        loadSubjects()
+      } else {
+        ElMessage.error(response.message || '创建科目失败')
+      }
     }
   } catch (error) {
-    console.error('创建科目失败:', error)
-    ElMessage.error('创建科目失败: ' + error.message)
+    console.error('保存科目失败:', error)
+    ElMessage.error('保存科目失败: ' + error.message)
   }
 }
 
@@ -1161,7 +1250,7 @@ const getImageUrl = (path) => {
     cleanPath = `images/${cleanPath}`
   }
   
-  const url = `https://practice.insightdata.top/uploads/${cleanPath}`
+  const url = `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/uploads/${cleanPath}`
   console.log('获取图片URL - 生成URL:', url)
   return url
 }
@@ -1527,7 +1616,7 @@ const handleCreateImageRemove = (file, fileList) => {
 
 // 获取服务器URL和token的辅助方法
 const getServerUrl = () => {
-  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'
 }
 
 const getToken = () => {
