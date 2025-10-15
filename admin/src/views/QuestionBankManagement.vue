@@ -679,7 +679,16 @@ const createForm = ref({
 const createFormRef = ref(null)
 
 // 图片上传相关
-const uploadUrl = ref(`${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/api/upload/image`)
+const getServerUrl = () => {
+  // 在生产环境中使用环境变量配置的服务器地址
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+  }
+  // 开发环境使用完整URL
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
+}
+
+const uploadUrl = ref(`${getServerUrl()}/api/upload/image`)
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
@@ -1250,7 +1259,7 @@ const getImageUrl = (path) => {
     cleanPath = `images/${cleanPath}`
   }
   
-  const url = `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/uploads/${cleanPath}`
+  const url = `${getServerUrl()}/uploads/${cleanPath}`
   console.log('获取图片URL - 生成URL:', url)
   return url
 }
@@ -1614,11 +1623,7 @@ const handleCreateImageRemove = (file, fileList) => {
   }
 }
 
-// 获取服务器URL和token的辅助方法
-const getServerUrl = () => {
-  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'
-}
-
+// 获取token的辅助方法
 const getToken = () => {
   return localStorage.getItem('token')
 }

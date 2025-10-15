@@ -256,6 +256,16 @@ import { questionAPI } from '@/api/question'
 
 const router = useRouter()
 
+// 获取服务器URL
+const getServerUrl = () => {
+  // 在生产环境中使用环境变量配置的服务器地址
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+  }
+  // 开发环境使用完整URL
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
+}
+
 // 当前步骤
 const currentStep = ref(0)
 
@@ -929,7 +939,7 @@ const getImageUrl = (imagePath) => {
   
   // 如果是相对路径，添加服务器地址
   if (imagePath.startsWith('/images/')) {
-    return `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}${imagePath}`
+    return `${getServerUrl()}${imagePath}`
   }
   
   return imagePath

@@ -1,1 +1,32 @@
  
+2025/10/15 16:32:47 [emerg] 21196#12116: CreateFile() "D:\code\miniprogram-1---mysql\nginx/conf/nginx.conf" failed (3: The system cannot find the path specified)
+2025/10/15 16:34:33 [warn] 19876#19616: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:34:33 [emerg] 19876#19616: host not found in upstream "api:3002" in D:\code\miniprogram-1---mysql\nginx/conf.d/default.conf:3
+2025/10/15 16:35:01 [warn] 19652#21468: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:35:01 [emerg] 19652#21468: host not found in upstream "api:3002" in D:\code\miniprogram-1---mysql\nginx/conf.d/default.conf:3
+2025/10/15 16:35:29 [warn] 19924#3580: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:35:29 [emerg] 19924#3580: duplicate upstream "api_backend" in D:\code\miniprogram-1---mysql\nginx/conf.d/ip.conf:2
+2025/10/15 16:36:09 [warn] 18452#20004: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:36:09 [emerg] 18452#20004: duplicate upstream "api_backend" in D:\code\miniprogram-1---mysql\nginx/conf.d/ip.conf:2
+2025/10/15 16:36:20 [warn] 20712#20548: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:36:20 [emerg] 20712#20548: could not build server_names_hash, you should increase server_names_hash_bucket_size: 32
+2025/10/15 16:36:38 [warn] 7748#18284: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:36:44 [warn] 1676#8200: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:36:44 [notice] 1676#8200: signal process started
+2025/10/15 16:36:44 [error] 1676#8200: invalid PID number "" in "D:\code\miniprogram-1---mysql\nginx/logs/nginx.pid"
+2025/10/15 16:39:23 [warn] 21204#11132: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 19280#20812: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 18772#21460: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 19272#18768: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 17108#21496: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 2592#19780: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:23 [warn] 19880#20628: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 12160#17540: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 18476#3848: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 17528#3324: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 21320#19176: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 18752#18284: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:39:24 [warn] 9644#18144: the "listen ... http2" directive is deprecated, use the "http2" directive instead in D:\code\miniprogram-1---mysql\nginx/conf.d/admin-ssl.conf:11
+2025/10/15 16:40:11 [error] 19280#17680: *2 CreateFile() "C:/admin/assets/avatar.png" failed (2: The system cannot find the file specified), client: 8.219.58.164, server: admin.practice.insightdate.top, request: "GET /assets/avatar.png HTTP/2.0", host: "admin.practice.insightdata.top:8443", referrer: "https://admin.practice.insightdata.top:8443/question-bank-management"
+2025/10/15 16:40:11 [error] 19280#17680: *2 CreateFile() "C:/admin/vite.svg" failed (2: The system cannot find the file specified), client: 8.219.58.164, server: admin.practice.insightdate.top, request: "GET /vite.svg HTTP/2.0", host: "admin.practice.insightdata.top:8443", referrer: "https://admin.practice.insightdata.top:8443/question-bank-management"
+2025/10/15 16:40:23 [error] 19280#17680: *2 CreateFile() "C:/admin/assets/avatar.png" failed (2: The system cannot find the file specified), client: 8.219.58.164, server: admin.practice.insightdate.top, request: "GET /assets/avatar.png HTTP/2.0", host: "admin.practice.insightdata.top:8443", referrer: "https://admin.practice.insightdata.top:8443/dashboard"

@@ -526,8 +526,18 @@ const editForm = ref({
   images: []
 })
 
+// 获取服务器URL
+const getServerUrl = () => {
+  // 在生产环境中使用环境变量配置的服务器地址
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+  }
+  // 开发环境使用完整URL
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
+}
+
 // 图片上传相关
-const uploadUrl = ref(`${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/api/upload/image`)
+const uploadUrl = ref(`${getServerUrl()}/api/upload/image`)
 const uploadHeaders = ref({
   'Authorization': `Bearer ${localStorage.getItem('token')}`
 })
@@ -887,7 +897,7 @@ const getImageUrl = (path) => {
     return ''
   }
   if (path.startsWith('http')) return path
-  return `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/uploads/${path}`
+  return `${getServerUrl()}/uploads/${path}`
 }
 
 // 获取图片预览列表

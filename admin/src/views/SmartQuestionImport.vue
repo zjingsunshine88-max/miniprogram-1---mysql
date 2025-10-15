@@ -300,6 +300,16 @@ import { adminAPI } from '../api/admin'
 
 const router = useRouter()
 
+// 获取服务器URL
+const getServerUrl = () => {
+  // 在生产环境中使用环境变量配置的服务器地址
+  if (import.meta.env.PROD) {
+    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+  }
+  // 开发环境使用完整URL
+  return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
+}
+
 // 响应式数据
 const uploadMode = ref('smart')
 const showHelp = ref(false)
@@ -468,7 +478,7 @@ const previewParse = async () => {
     console.log('FormData中的file字段:', formData.get('file'))
     console.log('FormData中的file字段类型:', typeof formData.get('file'))
     
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/api/enhanced-question/preview-parse`, {
+    const response = await fetch(`${getServerUrl()}/api/enhanced-question/preview-parse`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -553,7 +563,7 @@ const smartImport = async () => {
     formData.append('subjectId', importOptions.subjectId)
     formData.append('fileType', getFileExtension(file.name))
     
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}/api/enhanced-question/smart-upload`, {
+    const response = await fetch(`${getServerUrl()}/api/enhanced-question/smart-upload`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -671,7 +681,7 @@ const getImageUrl = (imagePath) => {
   
   // 如果是相对路径，添加服务器地址
   if (imagePath.startsWith('/images/')) {
-    return `${import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top:8443'}${imagePath}`
+    return `${getServerUrl()}${imagePath}`
   }
   
   return imagePath

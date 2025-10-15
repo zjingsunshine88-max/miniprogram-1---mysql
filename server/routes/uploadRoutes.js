@@ -49,7 +49,8 @@ router.post('/image', auth, koaMulter(imageUpload.single('file')), async (ctx) =
     // 生成访问URL
     const fileName = path.basename(file.path);
     const imagePath = `images/${fileName}`;
-    const url = `http://localhost:3002/uploads/${imagePath}`;
+    // 使用远程服务器域名生成完整URL
+    const url = `https://admin.practice.insightdata.top:8443/uploads/${imagePath}`;
 
     console.log('图片上传成功:', {
       originalName: file.originalname,
