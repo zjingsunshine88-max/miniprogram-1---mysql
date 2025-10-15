@@ -1,0 +1,2 @@
+// 获取token
+const getToken = (

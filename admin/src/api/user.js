@@ -3,8 +3,13 @@ const getToken = () => {
   return localStorage.getItem('token')
 }
 
-// 服务器API基础URL
+// 服务器API基础URL - 使用相对路径通过nginx代理
 const getServerUrl = () => {
+  // 在生产环境中使用相对路径，让nginx代理处理API请求
+  if (import.meta.env.PROD) {
+    return ''; // 使用相对路径，nginx会代理到主域名
+  }
+  // 开发环境使用完整URL
   return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
 }
 
