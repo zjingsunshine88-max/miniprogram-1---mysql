@@ -54,9 +54,26 @@ class EnhancedQuestionController {
         return;
       }
 
-      // 创建临时目录
-      const tempDir = path.join(__dirname, '../../temp');
-      await fs.promises.mkdir(tempDir, { recursive: true });
+      // 创建临时目录 - 使用相对路径（相对于server目录）
+      let tempDir = process.env.TEMP_DIR || path.join(__dirname, '../temp');
+      
+      try {
+        await fs.promises.mkdir(tempDir, { recursive: true });
+        console.log('临时目录创建成功:', tempDir);
+      } catch (error) {
+        console.error('临时目录创建失败:', error.message);
+        // 尝试使用系统临时目录
+        const os = require('os');
+        const fallbackTempDir = path.join(os.tmpdir(), 'question-upload');
+        try {
+          await fs.promises.mkdir(fallbackTempDir, { recursive: true });
+          console.log('使用系统临时目录:', fallbackTempDir);
+          tempDir = fallbackTempDir;
+        } catch (fallbackError) {
+          console.error('系统临时目录也创建失败:', fallbackError.message);
+          throw new Error('无法创建临时目录，请检查文件系统权限');
+        }
+      }
 
       // 保存上传的文件
       const tempFilePath = path.join(tempDir, `${Date.now()}_${file.originalname}`);
