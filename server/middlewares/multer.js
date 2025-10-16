@@ -2,10 +2,30 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// 确保临时目录存在
-const tempDir = path.join(__dirname, '../temp');
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
+// 确保临时目录存在 - 使用相对路径（相对于middlewares目录）
+let tempDir = process.env.TEMP_DIR || path.join(__dirname, '../temp');
+
+try {
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+    console.log('临时目录创建成功:', tempDir);
+  } else {
+    console.log('临时目录已存在:', tempDir);
+  }
+} catch (error) {
+  console.error('临时目录创建失败:', error.message);
+  // 尝试使用系统临时目录
+  const os = require('os');
+  const fallbackTempDir = path.join(os.tmpdir(), 'question-upload');
+  try {
+    if (!fs.existsSync(fallbackTempDir)) {
+      fs.mkdirSync(fallbackTempDir, { recursive: true });
+      console.log('使用系统临时目录:', fallbackTempDir);
+    }
+    tempDir = fallbackTempDir;
+  } catch (fallbackError) {
+    console.error('系统临时目录也创建失败:', fallbackError.message);
+  }
 }
 
 // 确保uploads目录存在

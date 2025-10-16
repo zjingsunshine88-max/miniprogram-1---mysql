@@ -1,0 +1,63 @@
+# Node.js依赖
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Admin项目依赖
+admin/node_modules/
+admin/package-lock.json
+admin/dist/
+
+# Server项目依赖
+server/node_modules/
+server/package-lock.json
+server/logs/
+server/temp/
+server/public/uploads/
+
+# 环境变量文件
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# 构建文件
+dist/
+build/
+out/
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# PM2日志
+.pm2/
+
+# 其他
+.cache/
+.temp/
