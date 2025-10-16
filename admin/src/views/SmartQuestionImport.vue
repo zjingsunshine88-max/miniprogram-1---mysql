@@ -302,11 +302,11 @@ const router = useRouter()
 
 // 获取服务器URL
 const getServerUrl = () => {
-  // 在生产环境中使用环境变量配置的服务器地址
+  // 生产环境走同域名，通过nginx代理到后端API
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+    return ''
   }
-  // 开发环境使用完整URL
+  // 开发环境使用环境变量或默认远端
   return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
 }
 

@@ -1182,7 +1182,7 @@ const updateQuestion = async (ctx) => {
     }
     
     // 准备更新数据
-    const allowedFields = ['chapter', 'type', 'difficulty', 'content', 'options', 'answer', 'analysis', 'images'];
+    const allowedFields = ['chapter', 'type', 'difficulty', 'content', 'options', 'answer', 'analysis', 'images', 'questionImages'];
     const updateFields = {};
     
     allowedFields.forEach(field => {

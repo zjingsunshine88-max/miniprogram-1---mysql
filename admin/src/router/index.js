@@ -29,22 +29,10 @@ const routes = [
         meta: { title: '用户管理' }
       },
       {
-        path: 'questions',
-        name: 'Questions',
-        component: () => import('@/views/Questions.vue'),
-        meta: { title: '题目管理' }
-      },
-      {
         path: 'question-bank-management',
         name: 'QuestionBankManagement',
         component: () => import('@/views/QuestionBankManagement.vue'),
         meta: { title: '题库管理' }
-      },
-      {
-        path: 'question-import',
-        name: 'QuestionImport',
-        component: () => import('@/views/QuestionImport.vue'),
-        meta: { title: '题库导入' }
       },
       {
         path: 'smart-question-import',

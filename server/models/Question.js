@@ -77,6 +77,11 @@ const Question = sequelize.define('Question', {
   images: {
     type: DataTypes.TEXT,
     allowNull: true,
+    comment: '解析图片（JSON格式）'
+  },
+  questionImages: {
+    type: DataTypes.TEXT,
+    allowNull: true,
     comment: '题目图片（JSON格式）'
   },
   tags: {

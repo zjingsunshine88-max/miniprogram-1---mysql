@@ -367,6 +367,29 @@
               />
             </el-form-item>
 
+            <el-form-item label="题目图片">
+              <div class="image-upload-section">
+                <el-upload
+                  ref="questionImageUploadRef"
+                  :action="uploadUrl"
+                  :headers="uploadHeaders"
+                  :on-success="handleQuestionImageSuccess"
+                  :on-error="handleQuestionImageError"
+                  :on-change="handleQuestionImageChange"
+                  :before-upload="beforeQuestionImageUpload"
+                  :file-list="editForm.questionImages"
+                  list-type="picture-card"
+                  :limit="5"
+                  accept="image/*"
+                >
+                  <el-icon><Plus /></el-icon>
+                </el-upload>
+                <div class="upload-tip">
+                  支持上传JPG、PNG格式图片，最多5张
+                </div>
+              </div>
+            </el-form-item>
+
             <el-form-item label="选项">
               <div class="options-editor">
                 <div v-for="(option, index) in editForm.options" :key="index" class="option-item">
@@ -413,7 +436,7 @@
                   :headers="uploadHeaders"
                   :on-success="handleImageSuccess"
                   :on-error="handleImageError"
-                  :on-remove="handleImageRemove"
+                  :on-change="handleImageChange"
                   :before-upload="beforeImageUpload"
                   :file-list="editForm.images"
                   list-type="picture-card"
@@ -454,6 +477,20 @@
           <div class="question-content">
             <h4>题目内容：</h4>
             <p>{{ currentQuestion.content }}</p>
+
+            <div v-if="currentQuestion.questionImages && currentQuestion.questionImages.length > 0">
+              <h4>题目图片：</h4>
+              <div class="images-grid">
+                <el-image
+                  v-for="(image, index) in getQuestionImagePreviewList()"
+                  :key="index"
+                  :src="getImageUrl(image.path)"
+                  :preview-src-list="getQuestionImagePreviewList().map(img => getImageUrl(img.path))"
+                  fit="cover"
+                  class="analysis-image"
+                />
+              </div>
+            </div>
 
             <div v-if="currentQuestion.options && currentQuestion.options.length > 0">
               <h4>选项：</h4>
@@ -658,7 +695,8 @@ const editForm = ref({
   options: [],
   answer: '',
   analysis: '',
-  images: []
+  images: [],
+  questionImages: []
 })
 
 // 创建表单
@@ -680,11 +718,11 @@ const createFormRef = ref(null)
 
 // 图片上传相关
 const getServerUrl = () => {
-  // 在生产环境中使用环境变量配置的服务器地址
+  // 生产环境走同域名，通过nginx代理到后端API
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_SERVER_URL || 'https://admin.practice.insightdata.top:8443';
+    return ''
   }
-  // 开发环境使用完整URL
+  // 开发环境使用环境变量或默认远端
   return import.meta.env.VITE_SERVER_URL || 'https://practice.insightdata.top'
 }
 
@@ -1147,7 +1185,10 @@ const startEdit = () => {
     return
   }
   
-  console.log('开始编辑题目:', currentQuestion.value)
+  console.log('=== 开始编辑题目 ===')
+  console.log('currentQuestion.value 完整数据:', currentQuestion.value)
+  console.log('currentQuestion.value.images:', currentQuestion.value.images)
+  console.log('currentQuestion.value.questionImages:', currentQuestion.value.questionImages)
   
   // 初始化编辑表单
   editForm.value = {
@@ -1160,10 +1201,13 @@ const startEdit = () => {
     options: parseOptions(currentQuestion.value.options),
     answer: currentQuestion.value.answer,
     analysis: currentQuestion.value.analysis || '',
-    images: parseImages(currentQuestion.value.images)
+    images: parseImages(currentQuestion.value.images),
+    questionImages: parseImages(currentQuestion.value.questionImages)
   }
   
-  console.log('编辑表单初始化完成:', editForm.value)
+  console.log('=== 编辑表单初始化完成 ===')
+  console.log('editForm.value.images:', editForm.value.images)
+  console.log('editForm.value.questionImages:', editForm.value.questionImages)
   editing.value = true
 }
 
@@ -1198,38 +1242,60 @@ const parseOptions = (options) => {
 
 // 解析图片数据
 const parseImages = (images) => {
-  if (!images) return []
+  console.log('=== parseImages 函数调用 ===')
+  console.log('接收到的 images 参数:', images)
+  console.log('images 类型:', typeof images)
   
-  console.log('解析图片数据 - 原始数据:', images)
-  console.log('解析图片数据 - 数据类型:', typeof images)
+  if (!images) {
+    console.log('images 为空，返回空数组')
+    return []
+  }
   
   try {
     let parsedImages = []
     
     // 如果是字符串，尝试解析JSON
     if (typeof images === 'string') {
+      console.log('images 是字符串，尝试解析 JSON')
       const parsed = JSON.parse(images)
-      console.log('解析图片数据 - 解析后的数据:', parsed)
+      console.log('JSON 解析后的数据:', parsed)
       if (Array.isArray(parsed)) {
         parsedImages = parsed
+        console.log('解析后是数组，长度:', parsedImages.length)
+      } else {
+        console.log('解析后不是数组')
       }
     }
     // 如果是数组
     else if (Array.isArray(images)) {
+      console.log('images 是数组，长度:', images.length)
       parsedImages = images
+    } else {
+      console.log('images 既不是字符串也不是数组')
     }
     
     // 处理图片数据，确保每个图片对象都有有效的path属性
-    return parsedImages
-      .filter(image => image && typeof image === 'object' && image.path && typeof image.path === 'string')
-      .map(image => {
-        console.log('解析图片数据 - 单个图片对象:', image)
-        return {
+    const result = parsedImages
+      .filter(image => {
+        const isValid = image && typeof image === 'object' && image.path && typeof image.path === 'string'
+        console.log('图片过滤检查:', { image, isValid })
+        return isValid
+      })
+      .map((image, index) => {
+        console.log('处理单个图片对象:', image)
+        const resultImage = {
+          uid: image.uid || Date.now() + index, // 添加 uid 用于 el-upload 组件识别
           name: image.name || 'image',
           url: getImageUrl(image.path),
           path: image.path
         }
+        console.log('处理后的图片对象:', resultImage)
+        return resultImage
       })
+    
+    console.log('=== parseImages 返回结果 ===')
+    console.log('最终返回的图片数组:', result)
+    return result
   } catch (error) {
     console.error('解析图片失败:', error)
     return []
@@ -1338,7 +1404,16 @@ const saveQuestion = async () => {
         .map(img => ({ path: img.path }))
     }
     
+    // 处理题目图片数据
+    let questionImagesData = []
+    if (editForm.value.questionImages && Array.isArray(editForm.value.questionImages)) {
+      questionImagesData = editForm.value.questionImages
+        .filter(img => img && img.path && typeof img.path === 'string' && img.path.trim() !== '')
+        .map(img => ({ path: img.path }))
+    }
+    
     console.log('保存时的图片数据:', imagesData)
+    console.log('保存时的题目图片数据:', questionImagesData)
     
     const updateData = {
       chapter: editForm.value.chapter,
@@ -1348,7 +1423,8 @@ const saveQuestion = async () => {
       options: JSON.stringify(editForm.value.options.map(opt => opt.content)),
       answer: editForm.value.answer,
       analysis: editForm.value.analysis,
-      images: JSON.stringify(imagesData)
+      images: JSON.stringify(imagesData),
+      questionImages: JSON.stringify(questionImagesData)
     }
     
     const response = await adminAPI.updateQuestion(editForm.value.id, updateData)
@@ -1375,37 +1451,26 @@ const handleImageSuccess = (response, file, fileList) => {
   console.log('图片上传成功 - 文件信息:', file)
   
   if (response.code === 200) {
-    const imageData = {
-      name: file.name,
-      url: response.data.url,
-      path: response.data.path
-    }
-    console.log('图片上传成功 - 添加的图片数据:', imageData)
-    
-    editForm.value.images.push(imageData)
+    // 更新文件对象的 path 属性
+    file.path = response.data.path
+    file.url = response.data.url
     ElMessage.success('图片上传成功')
   } else {
     ElMessage.error(response.message || '图片上传失败')
   }
 }
 
-// 图片删除处理
-const handleImageRemove = (file, fileList) => {
-  console.log('删除图片 - 文件信息:', file)
-  console.log('删除图片 - 剩余文件列表:', fileList)
-  
-  // 从editForm.images中移除对应的图片
-  if (editForm.value.images && Array.isArray(editForm.value.images)) {
-    const index = editForm.value.images.findIndex(img => 
-      img.name === file.name || img.path === file.path || img.url === file.url
-    )
-    if (index > -1) {
-      editForm.value.images.splice(index, 1)
-      console.log('图片已从编辑表单中移除')
-    }
-  }
-  
-  ElMessage.success('图片删除成功')
+// 图片文件列表变化处理
+const handleImageChange = (file, fileList) => {
+  console.log('图片文件列表变化:', { file, fileList })
+  // 同步更新 editForm.images
+  editForm.value.images = fileList.map(f => ({
+    uid: f.uid,
+    name: f.name,
+    url: f.url,
+    path: f.path
+  }))
+  console.log('更新后的 editForm.images:', editForm.value.images)
 }
 
 // 图片上传失败处理
@@ -1428,6 +1493,73 @@ const beforeImageUpload = (file) => {
     return false
   }
   return true
+}
+
+// 题目图片上传成功处理
+const handleQuestionImageSuccess = (response, file, fileList) => {
+  console.log('题目图片上传成功 - 响应数据:', response)
+  console.log('题目图片上传成功 - 文件信息:', file)
+  
+  if (response.code === 200) {
+    // 更新文件对象的 path 属性
+    file.path = response.data.path
+    file.url = response.data.url
+    ElMessage.success('题目图片上传成功')
+  } else {
+    ElMessage.error(response.message || '题目图片上传失败')
+  }
+}
+
+// 题目图片文件列表变化处理
+const handleQuestionImageChange = (file, fileList) => {
+  console.log('题目图片文件列表变化:', { file, fileList })
+  // 同步更新 editForm.questionImages
+  editForm.value.questionImages = fileList.map(f => ({
+    uid: f.uid,
+    name: f.name,
+    url: f.url,
+    path: f.path
+  }))
+  console.log('更新后的 editForm.questionImages:', editForm.value.questionImages)
+}
+
+// 题目图片上传失败处理
+const handleQuestionImageError = (error, file, fileList) => {
+  console.error('题目图片上传失败:', error)
+  ElMessage.error('题目图片上传失败')
+}
+
+// 题目图片上传前验证
+const beforeQuestionImageUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+  return true
+}
+
+// 获取题目图片预览列表
+const getQuestionImagePreviewList = () => {
+  if (!currentQuestion.value?.questionImages) return []
+  
+  try {
+    const images = typeof currentQuestion.value.questionImages === 'string' 
+      ? JSON.parse(currentQuestion.value.questionImages) 
+      : currentQuestion.value.questionImages
+    
+    return images
+      .filter(image => image && typeof image === 'object' && image.path && typeof image.path === 'string')
+      .map(image => ({ path: image.path }))
+  } catch (error) {
+    return []
+  }
 }
 
 // 删除题目
